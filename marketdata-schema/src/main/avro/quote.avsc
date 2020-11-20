@@ -1,0 +1,13 @@
+{"namespace": "com.ashish.marketdata.avro",
+ "type": "record",
+ "name": "Quote",
+ "fields": [
+     {"name": "time", "type": "long"},
+     {"name": "bidsize",  "type": ["long", "null"]},
+     {"name": "bidprice",  "type": ["double", "null"]},
+     {"name": "asksize",  "type": ["long", "null"]},
+     {"name": "askprice",  "type": ["double", "null"]},
+     {"name": "symbol",  "type": ["string", "null"]},
+     {"name": "exchange",  "type": ["string", "null"]}
+ ]
+}

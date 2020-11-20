@@ -1,0 +1,17 @@
+{"namespace": "com.ashish.marketdata.avro",
+ "type": "record",
+ "name": "Order",
+ "fields": [
+     {"name": "orderId",  "type": ["string", "null"]},
+     {"name": "clientId",  "type": ["string", "null"]},
+     {"name": "clientName",  "type": ["string", "null"]},
+     {"name": "brokerId",  "type": ["string", "null"]},
+     {"name": "brokerName",  "type": ["string", "null"]},
+     {"name": "ordertime", "type": "long"},
+     {"name": "side", "type": "int"},
+     {"name": "quantity",  "type": ["long", "null"]},
+     {"name": "limitPrice",  "type": ["double", "null"]},
+     {"name": "symbol",  "type": ["string", "null"]},
+     {"name": "exchange",  "type": ["string", "null"]}
+ ]
+}

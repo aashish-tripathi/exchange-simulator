@@ -1,0 +1,35 @@
+{"namespace": "com.ashish.marketdata.avro",
+ "type": "record",
+ "name": "MarketByPrice",
+ "fields": [
+  {"name": "symbol",  "type": ["string", "null"]},
+    {
+        "name":"bidList",
+        "type":{
+            "type": "array",
+            "items":{
+                "name":"BidDepth",
+                "type":"record",
+                "fields":[
+                    {"name":"bidPrice", "type":["double", "null"]},
+                    {"name":"bidSize", "type":["long", "null"]}
+                ]
+            }
+        }
+        },
+        {"name":"askList",
+          "type":{
+              "type": "array",
+              "items":{
+                  "name":"AskDepth",
+                  "type":"record",
+                  "fields":[
+                      {"name":"askPrice", "type":["double", "null"]},
+                      {"name":"askSize", "type":["long", "null"]}
+                  ]
+              }
+          }
+    }
+ ]
+}
+

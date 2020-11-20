@@ -1,0 +1,18 @@
+{"namespace": "com.ashish.marketdata.avro",
+ "type": "record",
+ "name": "MarketPrice",
+ "fields": [
+     {"name": "open",  "type": ["double", "null"]},
+     {"name": "high",  "type": ["double", "null"]},
+     {"name": "low",  "type": ["double", "null"]},
+     {"name": "close",  "type": ["double", "null"]},
+     {"name": "lastPrice",  "type": ["double", "null"]},
+     {"name": "volume",  "type": ["long", "null"]},
+     {"name": "uperCircuit",  "type": ["double", "null"]},
+     {"name": "lowerCircuit",  "type": ["double", "null"]},
+     {"name": "lastTradeTime", "type": "long"},
+     {"name": "lastTradeSize", "type": "long"},
+     {"name": "symbol",  "type": ["string", "null"]},
+     {"name": "exchange",  "type": ["string", "null"]}
+ ]
+}

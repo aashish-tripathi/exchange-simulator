@@ -1,0 +1,11 @@
+{"namespace": "com.ashish.marketdata.avro",
+ "type": "record",
+ "name": "Trade",
+ "fields": [
+     {"name": "time", "type": "long"},
+     {"name": "size",  "type": ["long", "null"]},
+     {"name": "price",  "type": ["double", "null"]},
+     {"name": "symbol",  "type": ["string", "null"]},
+     {"name": "exchange",  "type": ["string", "null"]}
+ ]
+}
