@@ -10,6 +10,9 @@
      {"name": "ordertime", "type": "long"},
      {"name": "side", "type": "int"},
      {"name": "quantity",  "type": ["long", "null"]},
+     {"name": "orderStatus",  "type": ["string", "null"]},
+     {"name": "filledQuantity",  "type": ["long", "null"]},
+     {"name": "remainingQuantity",  "type": ["long", "null"]},
      {"name": "limitPrice",  "type": ["double", "null"]},
      {"name": "symbol",  "type": ["string", "null"]},
      {"name": "exchange",  "type": ["string", "null"]}

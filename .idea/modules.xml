@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/exchange-simulator.iml" filepath="$PROJECT_DIR$/exchange-simulator.iml" />
+      <module fileurl="file://$PROJECT_DIR$/matching-engine/matching-engine.iml" filepath="$PROJECT_DIR$/matching-engine/matching-engine.iml" />
+      <module fileurl="file://$PROJECT_DIR$/order-simulator/order-simulator.iml" filepath="$PROJECT_DIR$/order-simulator/order-simulator.iml" />
+      <module fileurl="file://$PROJECT_DIR$/marketdata-schema/schema.iml" filepath="$PROJECT_DIR$/marketdata-schema/schema.iml" />
+    </modules>
+  </component>
+</project>
