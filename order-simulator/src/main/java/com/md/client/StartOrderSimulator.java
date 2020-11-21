@@ -16,7 +16,7 @@ public class StartOrderSimulator {
     private static final Logger LOGGER = LoggerFactory.getLogger(StartOrderSimulator.class);
 
     public static void main(String[] args) throws IOException, JMSException {
-
+        System.out.printf("Welcome");
         String configPath =null;
         if(args.length ==0){
             System.out.println("Config file not provided, loading file from default directory");
