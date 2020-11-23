@@ -39,10 +39,11 @@ public class StartOrderSimulator {
         String exchange = properties.getProperty("exsim.order.sim.exchange");
         String brokerName = properties.getProperty("exsim.order.sim.broker");
         String brokerId = properties.getProperty("exsim.order.sim.brokerId");
+        int workers = Integer.parseInt(properties.getProperty("exsim.order.sim.workers"));
 
         String [] clientDetails = clients[0].split("-");
         OrderSimulator orderSimulator = new OrderSimulator(serverUrl,orderTopic, kafkaAsCarrier);
-        orderSimulator.startSimulator(stocks, exchange, brokerName, brokerId, clientDetails[0],clientDetails[1]);
+        orderSimulator.startSimulator(stocks, exchange, brokerName, brokerId, clientDetails[0],clientDetails[1],workers);
         LOGGER.info("Order Simulator has been started {}", Calendar.getInstance().getTime());
 
         Scanner scanner= new Scanner(System.in);

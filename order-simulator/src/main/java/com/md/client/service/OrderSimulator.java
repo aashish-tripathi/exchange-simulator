@@ -1,6 +1,7 @@
 package com.md.client.service;
 
 import com.md.client.senders.OrderSender;
+import com.md.client.util.Throughput;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,9 +9,7 @@ import org.slf4j.LoggerFactory;
 import javax.jms.JMSException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.*;
 
 public class OrderSimulator {
     private boolean kafka;
@@ -19,6 +18,7 @@ public class OrderSimulator {
     private String serverUrl;
     private ExecutorService service;
     private List<OrderSender> workerThreads;
+    private Throughput throughputWorker;
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderSimulator.class);
 
     public OrderSimulator(String serverUrl, final String topic, boolean kafka) {
@@ -33,10 +33,10 @@ public class OrderSimulator {
         });
     }
 
-    public void startSimulator(final String [] symbols, final String exchange, final String brokerName, final String brokerId, final String clientId, final String clientName) throws JMSException {
+    public void startSimulator(final String[] symbols, final String exchange, final String brokerName, final String brokerId, final String clientId, final String clientName, int workers) throws JMSException {
         workerThreads = new ArrayList<>();
         for (int i = 0; i < 2; i++) {
-            OrderSender senderEMS = new OrderSender(serverUrl, topic, symbols, exchange, brokerName, brokerId, clientId, clientName, kafka);
+            OrderSender senderEMS = new OrderSender(serverUrl, topic, symbols, exchange, brokerName, brokerId, clientId, clientName, kafka,throughputWorker);
             workerThreads.add(senderEMS);
         }
         workerThreads.forEach(t -> service.submit(t));
