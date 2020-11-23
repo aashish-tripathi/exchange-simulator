@@ -75,7 +75,7 @@ public class OrderSender implements Runnable, ExceptionListener {
                 } else {
                     publishToKafka(newOrder, encodedOrder);
                 }
-                Thread.sleep(100);
+                Thread.sleep(1000);
                 LOGGER.info("Order {} sent by {}", newOrder, newOrder.getClientName());
             } catch (JMSException | RuntimeException | InterruptedException e) {
                 LOGGER.error("Error occurred while sending order " + e.fillInStackTrace());
@@ -84,7 +84,7 @@ public class OrderSender implements Runnable, ExceptionListener {
                         emsBroker.closeProducer();
                     }
                 } catch (JMSException ex) {
-                    ex.printStackTrace();
+                    LOGGER.error("Error occurred while sending order " + ex.fillInStackTrace());
                 }
             }
             msgCount++;

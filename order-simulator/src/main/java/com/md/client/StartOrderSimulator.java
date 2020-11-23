@@ -16,10 +16,10 @@ public class StartOrderSimulator {
     private static final Logger LOGGER = LoggerFactory.getLogger(StartOrderSimulator.class);
 
     public static void main(String[] args) throws IOException, JMSException {
-        System.out.printf("Welcome");
+
         String configPath =null;
         if(args.length ==0){
-            System.out.println("Config file not provided, loading file from default directory");
+            LOGGER.warn("Config file not provided, loading file from default directory");
             configPath = "/order-sim.properties";
         }else{
             configPath = args[0];
@@ -47,7 +47,7 @@ public class StartOrderSimulator {
         LOGGER.info("Order Simulator has been started {}", Calendar.getInstance().getTime());
 
         Scanner scanner= new Scanner(System.in);
-        System.out.println("Enter to stop");
+        LOGGER.warn("Enter to stop");
         scanner.nextLine();
         orderSimulator.shutDown();
 

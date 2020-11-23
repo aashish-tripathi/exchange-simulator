@@ -25,7 +25,7 @@ public class OrderCreator {
         final double sendingPrice = Double.valueOf(Utility.dataFormat.format(random.nextDouble(price, price + 5)));
         double lowerCircuit = circuit.getLowerCircuit();
         double upperCircuit = circuit.getUpperCircuit();
-        if (sendingPrice >= lowerCircuit && sendingPrice <= upperCircuit ) {
+        if (sendingPrice >= lowerCircuit && sendingPrice <= upperCircuit && spreadValidity(sendingPrice)) {
             order = Order.newBuilder()
                     .setSymbol(symbol.toString())
                     .setExchange(exchange).setBrokerId(brokerId)

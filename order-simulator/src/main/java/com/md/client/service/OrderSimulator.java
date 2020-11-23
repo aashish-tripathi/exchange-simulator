@@ -35,7 +35,7 @@ public class OrderSimulator {
 
     public void startSimulator(final String[] symbols, final String exchange, final String brokerName, final String brokerId, final String clientId, final String clientName, int workers) throws JMSException {
         workerThreads = new ArrayList<>();
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < workers; i++) {
             OrderSender senderEMS = new OrderSender(serverUrl, topic, symbols, exchange, brokerName, brokerId, clientId, clientName, kafka,throughputWorker);
             workerThreads.add(senderEMS);
         }
@@ -49,6 +49,7 @@ public class OrderSimulator {
         service.shutdown();
         LOGGER.info("All threads has been shutdown!");
     }
+    //TO DO
     public void startManualMode(){
 
     }
