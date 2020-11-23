@@ -68,6 +68,8 @@ public class TradesSender implements Runnable {
                 LOGGER.info("Trade sent...{}", trade);
             }
         }
+        LOGGER.warn("Thread {} received shutdown signal ", Thread.currentThread().getId());
+        LOGGER.warn("Thread {} shutdown completed ", Thread.currentThread().getId());
     }
 
     private void publishToEMS(String encodedTrade) {

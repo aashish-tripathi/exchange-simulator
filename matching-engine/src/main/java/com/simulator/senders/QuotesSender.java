@@ -69,6 +69,8 @@ public class QuotesSender implements Runnable {
                 LOGGER.info("Quote sent...{}", quote);
             }
         }
+        LOGGER.warn("Thread {} received shutdown signal ", Thread.currentThread().getId());
+        LOGGER.warn("Thread {} shutdown completed ", Thread.currentThread().getId());
     }
 
     private void publishToEMS(String encodedQuote) {
@@ -113,7 +115,7 @@ public class QuotesSender implements Runnable {
             jsonEncoder.flush();
             data = stream.toByteArray();
         } catch (IOException e) {
-            System.out.println("Serialization error:" + e.getMessage());
+            LOGGER.error("Serialization error: {}" , e.getMessage());
         }
         return data;
     }

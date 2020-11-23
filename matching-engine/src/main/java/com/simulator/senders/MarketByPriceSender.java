@@ -63,8 +63,11 @@ public class MarketByPriceSender implements Runnable{
                 }else{
                     publishToKafka(marketByPrice, encodedMarketByPrice);
                 }
+                LOGGER.info("MarketByPrice sent {}" , marketByPrice);
             }
         }
+        LOGGER.warn("Thread {} received shutdown signal ", Thread.currentThread().getId());
+        LOGGER.warn("Thread {} shutdown completed ", Thread.currentThread().getId());
     }
 
     private void publishToKafka(MarketByPrice marketByPrice, String encodedMarketByPrice) {
@@ -78,7 +81,6 @@ public class MarketByPriceSender implements Runnable{
                     LOGGER.info("Topic {} " ,recordMetadata.topic());
                     LOGGER.info("Partition {}" ,recordMetadata.partition());
                     LOGGER.info("Offset {}" ,recordMetadata.offset());
-                    LOGGER.info("MarketByPrice sent {}" , marketByPrice);
                 }else{
                     LOGGER.info("Exception Occurred while sending MarketByPrice through kafka... {}", e.getLocalizedMessage());
                 }
@@ -93,7 +95,7 @@ public class MarketByPriceSender implements Runnable{
             emsBroker.send(message);
             LOGGER.info("MarketByPrice sent...{}", marketByPrice);
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error(e.getLocalizedMessage());
         }
     }
 
@@ -113,7 +115,6 @@ public class MarketByPriceSender implements Runnable{
                 //buyIterator.remove();
             } else {
                 marketByPrice.getBidList().add(new BidDepth(buyPrice, qty));
-                System.out.println("  " + buyPrice + "   " + qty + "  ");
             }
             buylimit++;
             if(buylimit==10){
@@ -153,8 +154,7 @@ public class MarketByPriceSender implements Runnable{
             jsonEncoder.flush();
             data = stream.toByteArray();
         } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Serialization error:" + e.getMessage());
+            LOGGER.error(e.getLocalizedMessage());
         }
         return data;
     }

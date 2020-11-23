@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import javax.jms.JMSException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -45,5 +46,12 @@ public class OrderBookManager implements BookManager {
             LOGGER.info("Matching thread created for {}", symbol);
         }
         matchingEngine.addORUpdateOrderBook(order);
+    }
+
+    public void stopAllMatchingEngine(){
+        Set<String> symbols = orderMatchingEngineMap.keySet();
+        symbols.forEach(s->{
+            orderMatchingEngineMap.get(s).setRunning(false);
+        });
     }
 }

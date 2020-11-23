@@ -37,10 +37,10 @@ public class OrderMatchingEngine implements Runnable {
         this.symbol = symbol;
         this.buyOrders = new ConcurrentSkipListMap<>();
         this.sellOrders = new ConcurrentSkipListMap<>();
-        tradeEngine = new TradesSender(serverUrl,tradeTopic,symbol, kafka);
-        quoteEngine = new QuotesSender(serverUrl, quoteTopic,symbol,kafka);
-        marketPriceEngine = new MarketPriceSender(serverUrl, marketPriceTopic,symbol,kafka);
-        marketByPriceSender = new MarketByPriceSender(serverUrl, marketByPriceTopic,symbol,kafka);
+        this.tradeEngine = new TradesSender(serverUrl, tradeTopic, symbol, kafka);
+        this.quoteEngine = new QuotesSender(serverUrl, quoteTopic, symbol, kafka);
+        this.marketPriceEngine = new MarketPriceSender(serverUrl, marketPriceTopic, symbol, kafka);
+        this.marketByPriceSender = new MarketByPriceSender(serverUrl, marketByPriceTopic, symbol, kafka);
         new Thread(this).start();
     }
 
@@ -49,7 +49,7 @@ public class OrderMatchingEngine implements Runnable {
             BlockingQueue<Order> buyOrderQueue = buyOrders.computeIfAbsent(order.getLimitPrice(), k -> new ArrayBlockingQueue<>(1024));
             if (order.getLimitPrice() == 0d) { // market order handling
                 getModifiedQueue(buyOrderQueue, order);
-                LOGGER.info("Buy Market Order Received , modifying Queue position for symbol {}",symbol);
+                LOGGER.info("Buy Market Order Received , modifying Queue position for symbol {}", symbol);
             } else {
                 buyOrderQueue.add(order);
             }
@@ -57,12 +57,12 @@ public class OrderMatchingEngine implements Runnable {
             BlockingQueue<Order> sellOrderQueue = sellOrders.computeIfAbsent(order.getLimitPrice(), k -> new ArrayBlockingQueue<>(1024));
             if (order.getLimitPrice() == 0d) { // market order handling
                 getModifiedQueue(sellOrderQueue, order);
-                LOGGER.info("Sell Market Order Received , modifying Queue position for symbol {}",symbol);
+                LOGGER.info("Sell Market Order Received , modifying Queue position for symbol {}", symbol);
             } else {
                 sellOrderQueue.add(order);
             }
         }
-        marketByPriceSender.addORUpdateOrderBook(order.getSymbol().toString(),buyOrders, sellOrders); // send book
+        marketByPriceSender.addORUpdateOrderBook(order.getSymbol().toString(), buyOrders, sellOrders); // send book
     }
 
     private void getModifiedQueue(BlockingQueue<Order> orderQueueByPrice, Order order) {
@@ -91,6 +91,8 @@ public class OrderMatchingEngine implements Runnable {
                 }
             }
         }
+        LOGGER.warn("Thread {} received shutdown signal ", Thread.currentThread().getId());
+        LOGGER.warn("Thread {} shutdown completed ", Thread.currentThread().getId());
     }
 
     private void executeTransaction(NavigableMap<Double, BlockingQueue<Order>> buyMap, NavigableMap<Double, BlockingQueue<Order>> sellMap, double buyPrice, double sellPrice, BlockingQueue<Order> buyQueue, BlockingQueue<Order> sellQueue, Order buyOrd, Order sellOrd) {
@@ -151,7 +153,7 @@ public class OrderMatchingEngine implements Runnable {
         marketPrice.setLastTradeSize(order.getQuantity());
         marketPrice.setLastTradeTime(Calendar.getInstance().getTimeInMillis());
         marketPriceEngine.addORUpdateMarketPrice(marketPrice);
-        printBook();
+        // printBook();
     }
 
     private void addTrade(Order buyOrd, long sQty) {
@@ -164,7 +166,7 @@ public class OrderMatchingEngine implements Runnable {
         tradeEngine.addTrade(trade);
     }
 
-    private void addQuote(Order buyOrd, Order sellOrder ) {
+    private void addQuote(Order buyOrd, Order sellOrder) {
         Quote quote = new Quote();
         quote.setBidprice(buyOrd.getLimitPrice());
         quote.setBidsize(buyOrd.getQuantity());
@@ -184,8 +186,12 @@ public class OrderMatchingEngine implements Runnable {
         return running;
     }
 
-    public void setRunning(boolean running) {
+    public void setRunning(final boolean running) {
         this.running = running;
+        marketPriceEngine.setRunning(running);
+        marketByPriceSender.setRunning(running);
+        tradeEngine.setRunning(running);
+        quoteEngine.setRunning(running);
     }
 
     public NavigableMap<Double, BlockingQueue<Order>> getBuyOrders() {
@@ -197,25 +203,25 @@ public class OrderMatchingEngine implements Runnable {
     }
 
     public void printBook() {
-        System.out.println("Symbol " + symbol + "");
-        System.out.println("  Bid " + "  Size  ");
+        LOGGER.info("Symbol " + symbol + "");
+        LOGGER.info("  Bid " + "  Size  ");
         for (double buyPrice : buyOrders.navigableKeySet()) {
             BlockingQueue<Order> buyOrder = buyOrders.get(buyPrice);
             long qty = getTotalQty(buyOrder);
             if (qty == 0) {
                 //buyIterator.remove();
             } else {
-                System.out.println("  " + buyPrice + "   " + qty + "  ");
+                LOGGER.info("  " + buyPrice + "   " + qty + "  ");
             }
         }
-        System.out.println("  Offer " + " Size  ");
+        LOGGER.info("  Offer " + " Size  ");
         for (double sellPrice : sellOrders.navigableKeySet()) {
             BlockingQueue<Order> sellOrder = sellOrders.get(sellPrice);
             long qty = getTotalQty(sellOrder);
             if (qty == 0) {
                 //sellIterator.remove();
             } else {
-                System.out.println("  " + sellPrice + "   " + qty + "  ");
+                LOGGER.info("  " + sellPrice + "   " + qty + "  ");
             }
         }
     }

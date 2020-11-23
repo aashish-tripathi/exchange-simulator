@@ -27,7 +27,7 @@ public class OrderReceiver implements Runnable {
     private BookManager bookManager;
     private String topic;
     private EMSBroker emsBroker;
-    private KafkaConsumer<String,String> kafkaConsumer;
+    private KafkaConsumer<String, String> kafkaConsumer;
     private volatile boolean running = true;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderReceiver.class);
@@ -36,10 +36,10 @@ public class OrderReceiver implements Runnable {
         this.topic = topic;
         this.kafka = kafka;
         this.bookManager = bookManager;
-        if(!kafka) {
-            emsBroker = new EMSBroker(null, null, null);
+        if (!kafka) {
+            emsBroker = new EMSBroker(serverUrl, null, null);
             emsBroker.createConsumer(topic, true);
-        }else{
+        } else {
             this.kafkaConsumer = new KafkaBroker(serverUrl).createConsumer(null);
             this.kafkaConsumer.subscribe(Arrays.asList(topic));
         }
@@ -49,33 +49,34 @@ public class OrderReceiver implements Runnable {
     public void run() {
         int ackMode = Session.AUTO_ACKNOWLEDGE;
         while (isRunning()) {
-            if(!kafka){
+            if (!kafka) {
                 try {
                     consumeFromEMS();
                 } catch (JMSException e) {
                     LOGGER.error(e.getLocalizedMessage());
                 }
-            }else{
+            } else {
                 try {
                     consumeFromKafka();
-                } catch (JMSException e) {
+                } catch (Exception e) {
                     LOGGER.error(e.getLocalizedMessage());
                 }
             }
         }
-        LOGGER.warn(Thread.currentThread().getName()+ " has been stopped");
+        LOGGER.warn("Thread {} received shutdown signal ", Thread.currentThread().getId());
+        LOGGER.warn("Thread {} shutdown completed ", Thread.currentThread().getId());
     }
 
-    private void consumeFromKafka() throws JMSException{
-        ConsumerRecords<String,String> records=kafkaConsumer.poll(Duration.ofMillis(10));
-        for(ConsumerRecord<String,String> record: records){
+    private void consumeFromKafka() throws JMSException {
+        ConsumerRecords<String, String> records = kafkaConsumer.poll(Duration.ofMillis(10));
+        for (ConsumerRecord<String, String> record : records) {
             String symbol = record.key();
             String data = record.value();
             byte[] decoded = Base64.getDecoder().decode(data);
             Order order = deSerealizeAvroHttpRequestJSON(decoded);
             bookManager.routOrder(order);
-            LOGGER.info("Key: "+ symbol + ", Value:" +data);
-            LOGGER.info("Partition:" + record.partition()+",Offset:"+record.offset());
+            LOGGER.info("Key: " + symbol + ", Value:" + data);
+            LOGGER.info("Partition:" + record.partition() + ",Offset:" + record.offset());
         }
     }
 
@@ -89,10 +90,6 @@ public class OrderReceiver implements Runnable {
             Order order = deSerealizeAvroHttpRequestJSON(decoded);
             bookManager.routOrder(order);
         }
-    }
-
-    private boolean isInCircuit(Order order) {
-        return  order.getLimitPrice() > Constant.lowerCircuit && order.getLimitPrice() < Constant.upperCircuit;
     }
 
     public Order deSerealizeAvroHttpRequestJSON(byte[] data) {

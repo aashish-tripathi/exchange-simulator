@@ -71,6 +71,8 @@ public class MarketPriceSender implements Runnable {
                 LOGGER.info("MarketPrice sent...{}", marketPrice);
             }
         }
+        LOGGER.warn("Thread {} received shutdown signal ", Thread.currentThread().getId());
+        LOGGER.warn("Thread {} shutdown completed ", Thread.currentThread().getId());
     }
 
     private void publishToEMS(String encodedMarketPrice) {
