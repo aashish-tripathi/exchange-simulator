@@ -41,6 +41,7 @@ public class StartMatchingEngineApp {
         final String quoteTopic = properties.getProperty("exsim.nse.quotestopic");
         final String marketPriceTopic = properties.getProperty("exsim.nse.marketpricetopic");
         final String marketByPriceTopic = properties.getProperty("exsim.nse.marketbypricetopic");
+        final String executionTopic = properties.getProperty("exsim.nse.marketbypricetopic");
         final int workers = Integer.parseInt(properties.getProperty("exsim.nse.consumer.threads"));
 
         ExecutorService service = Executors.newFixedThreadPool(10, new ThreadFactory() {
@@ -56,7 +57,7 @@ public class StartMatchingEngineApp {
                 return t;
             }
         });
-        final OrderBookManager orderBookManager = new OrderBookManager(serverUrl, tradeTopic, quoteTopic, marketPriceTopic, marketByPriceTopic, kafkaAsCarrier);
+        final OrderBookManager orderBookManager = new OrderBookManager(serverUrl, tradeTopic, quoteTopic, marketPriceTopic, marketByPriceTopic, executionTopic, kafkaAsCarrier);
         final List<OrderReceiver> receivers = new ArrayList<>();
         for (int i = 0; i < workers; i++) {
             OrderReceiver orderReceiver = new OrderReceiver(serverUrl, orderTopic, orderBookManager, kafkaAsCarrier);

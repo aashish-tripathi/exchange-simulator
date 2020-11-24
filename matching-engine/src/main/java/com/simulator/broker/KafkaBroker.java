@@ -56,7 +56,7 @@ public class KafkaBroker {
 
     public KafkaConsumer<String, String> createConsumer(Properties optionalProperties){
         ThreadLocalRandom local = ThreadLocalRandom.current();
-        consumerProperties.setProperty(ConsumerConfig.GROUP_ID_CONFIG,"Order-Simulator-"+local.nextInt(10));
+        consumerProperties.setProperty(ConsumerConfig.GROUP_ID_CONFIG,"Order-Consumer");
         if(optionalProperties ==null)
             return  new KafkaConsumer<String, String>(consumerProperties); // return default kafka consumer
         else{
@@ -66,7 +66,6 @@ public class KafkaBroker {
                 consumerProperties.put(key, optionalProperties.get(key));
             }
         }
-
         return new KafkaConsumer<String, String>(consumerProperties);
     }
 }

@@ -4,10 +4,7 @@ import com.ashish.marketdata.avro.MarketPrice;
 import com.ashish.marketdata.avro.Order;
 import com.ashish.marketdata.avro.Quote;
 import com.ashish.marketdata.avro.Trade;
-import com.simulator.senders.MarketByPriceSender;
-import com.simulator.senders.MarketPriceSender;
-import com.simulator.senders.QuotesSender;
-import com.simulator.senders.TradesSender;
+import com.simulator.senders.*;
 import com.simulator.util.Constant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,10 +27,11 @@ public class OrderMatchingEngine implements Runnable {
     private final QuotesSender quoteEngine;
     private final MarketPriceSender marketPriceEngine;
     private final MarketByPriceSender marketByPriceSender;
+    //private final ExecutionsSender executionsSender;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderMatchingEngine.class);
 
-    public OrderMatchingEngine(String serverUrl, String symbol, String tradeTopic, String quoteTopic, String marketPriceTopic, String marketByPriceTopic, boolean kafka) throws JMSException {
+    public OrderMatchingEngine(String serverUrl, String symbol, String tradeTopic, String quoteTopic, String marketPriceTopic, String marketByPriceTopic, String executionsTopic, boolean kafka) throws JMSException {
         this.symbol = symbol;
         this.buyOrders = new ConcurrentSkipListMap<>();
         this.sellOrders = new ConcurrentSkipListMap<>();
@@ -41,6 +39,7 @@ public class OrderMatchingEngine implements Runnable {
         this.quoteEngine = new QuotesSender(serverUrl, quoteTopic, symbol, kafka);
         this.marketPriceEngine = new MarketPriceSender(serverUrl, marketPriceTopic, symbol, kafka);
         this.marketByPriceSender = new MarketByPriceSender(serverUrl, marketByPriceTopic, symbol, kafka);
+        //this.executionsSender = new ExecutionsSender(serverUrl, marketByPriceTopic, symbol, kafka);
         new Thread(this).start();
     }
 
@@ -106,9 +105,22 @@ public class OrderMatchingEngine implements Runnable {
             buyOrd.setQuantity(remQty);
             addTrade(buyOrd, sQty);
             if (sellQueue.size() == 1) {
+                BlockingQueue<Order> completedOrder = sellMap.get(sellPrice);
+                completedOrder.forEach(o -> {
+                    o.setOrderStatus("completed");
+                    o.setFilledQuantity(sQty);
+                    o.setRemainingQuantity(0l);
+                    //executionsSender.addExecutions(o);
+                });
                 sellMap.remove(sellPrice);
+
             } else {
+                sellOrd.setOrderStatus("completed");
+                sellOrd.setFilledQuantity(sQty);
+                sellOrd.setRemainingQuantity(0l);
+               // executionsSender.addExecutions(sellOrd);
                 sellQueue.remove(sellOrd);// update sell position
+
             }
         } else if (bQty < sQty) {
             long remQty = sQty - bQty;
@@ -116,12 +128,31 @@ public class OrderMatchingEngine implements Runnable {
             sellOrd.setQuantity(remQty);
             addTrade(buyOrd, bQty);
             if (buyQueue.size() == 1) {
+                BlockingQueue<Order> completedOrder = buyMap.get(buyPrice);
+                completedOrder.forEach(o -> {
+                    o.setOrderStatus("completed");
+                    o.setFilledQuantity(sQty);
+                    o.setRemainingQuantity(0l);
+                   // executionsSender.addExecutions(o);
+                });
                 buyMap.remove(buyPrice);
             } else {
+                buyOrd.setOrderStatus("completed");
+                buyOrd.setFilledQuantity(sQty);
+                buyOrd.setRemainingQuantity(0l);
+                //executionsSender.addExecutions(sellOrd);
                 buyQueue.remove(buyOrd);// update buy position
             }
         } else {
+            buyOrd.setOrderStatus("completed");
+            buyOrd.setFilledQuantity(sQty);
+            buyOrd.setRemainingQuantity(0l);
+            //executionsSender.addExecutions(sellOrd);
             buyQueue.remove(buyOrd);// update buy position
+            sellOrd.setOrderStatus("completed");
+            sellOrd.setFilledQuantity(sQty);
+            sellOrd.setRemainingQuantity(0l);
+            //executionsSender.addExecutions(sellOrd);
             sellQueue.remove(sellOrd); // update sell position
             addTrade(buyOrd, bQty);
         }

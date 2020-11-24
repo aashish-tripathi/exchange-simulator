@@ -21,17 +21,19 @@ public class OrderBookManager implements BookManager {
     private String quoteTopic;
     private String marketPriceTopic;
     private String marketByPriceTopic;
+    private String executionTopic;
     private ConcurrentMap<String, OrderMatchingEngine> orderMatchingEngineMap;
     private boolean kafka;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderBookManager.class);
 
-    public OrderBookManager(String serverUrl, String tradeTopic, String quoteTopic, String marketPriceTopic, String marketByPriceTopic, boolean kafkaAsCarrier) {
+    public OrderBookManager(String serverUrl, String tradeTopic, String quoteTopic, String marketPriceTopic, String marketByPriceTopic, String executionTopic, boolean kafkaAsCarrier) {
         this.serverUrl = serverUrl;
         this.tradeTopic = tradeTopic;
         this.quoteTopic = quoteTopic;
         this.marketPriceTopic = marketPriceTopic;
         this.marketByPriceTopic = marketByPriceTopic;
+        this.executionTopic = executionTopic;
         this.kafka = kafkaAsCarrier;
         this.orderMatchingEngineMap = new ConcurrentHashMap<>();
     }
@@ -41,7 +43,7 @@ public class OrderBookManager implements BookManager {
         String symbol = String.valueOf(order.getSymbol());
         OrderMatchingEngine matchingEngine = orderMatchingEngineMap.get(symbol);
         if (matchingEngine == null) {
-            matchingEngine = new OrderMatchingEngine(serverUrl, symbol, tradeTopic, quoteTopic, marketPriceTopic, marketByPriceTopic, kafka);
+            matchingEngine = new OrderMatchingEngine(serverUrl, symbol, tradeTopic, quoteTopic, marketPriceTopic, marketByPriceTopic, executionTopic, kafka);
             orderMatchingEngineMap.put(symbol, matchingEngine);
             LOGGER.info("Matching thread created for {}", symbol);
         }
