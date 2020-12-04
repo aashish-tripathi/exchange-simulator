@@ -27,7 +27,6 @@ public class StartOrderSimulator {
         } else {
             configPath = args[0];
         }
-
         final boolean kafkaAsCarrier = true;
 
         Properties properties = new Properties();
@@ -56,28 +55,44 @@ public class StartOrderSimulator {
         BlockingQueue<Order> orderQueueForManual = new ArrayBlockingQueue<Order>(1024);
         orderSimulator.startSimulatorInManualMode(stocks, exchange, brokerName, brokerId, clientDetails[0], clientDetails[1], workers, true, orderQueueForManual);
         LOGGER.info("Order Simulator has been started in manual mode {}", Calendar.getInstance().getTime());
-        String data = "";
+        String data = null;
         Scanner scanner = new Scanner(System.in);
         boolean stopManual = true;
-        LOGGER.warn("Enter exit to stop");
+        LOGGER.warn("Enter 2 times to stop...");
         while (stopManual) {
-            System.out.println("Enter symbol ");
             Order order = new Order();
+            LOGGER.info("Enter symbol ");
             data = scanner.nextLine();
-            stopManual = isStopManual(data, stopManual);
-            order.setSymbol(data);
-            System.out.println("Enter qunantity ");
+            if (!data.isEmpty()) {
+                order.setSymbol(data);
+            }
+            if (data.isEmpty()) {
+                stopManual = false;
+                break;
+            }
+            LOGGER.info("Enter qunantity ");
             data = scanner.nextLine();
-            stopManual = isStopManual(data, stopManual);
-            order.setQuantity(Long.parseLong(data));
-            System.out.println("Enter price ");
+            if (!data.isEmpty() && Long.parseLong(data) > 0) {
+                order.setQuantity(Long.parseLong(data));
+            }
+            if (data.isEmpty()) {
+                stopManual = false;
+                break;
+            }
+            LOGGER.info("Enter price ");
             data = scanner.nextLine();
-            stopManual = isStopManual(data, stopManual);
-            order.setLimitPrice(Double.parseDouble(data));
-            System.out.println("Enter side (Buy 1, Sell 2 ) ");
+            if (!data.isEmpty() && Double.parseDouble(data) > 0) {
+                order.setLimitPrice(Double.parseDouble(data));
+            }
+            if (data.isEmpty()) {
+                stopManual = false;
+                break;
+            }
+            LOGGER.info("Enter side (Buy 1, Sell 2 ) ");
             data = scanner.nextLine();
-            stopManual = isStopManual(data, stopManual);
-            order.setSide(Integer.parseInt(data));
+            if (!data.isEmpty() && Integer.parseInt(data) > 0) {
+                order.setSide(Integer.parseInt(data));
+            }
             order.setExchange("NSE");
             order.setBrokerId("Zero001");
             order.setBrokerName("Zerodha");
@@ -97,19 +112,12 @@ public class StartOrderSimulator {
         orderSimulator.startSimulatorInAutomaticMode(stocks, exchange, brokerName, brokerId, clientDetails[0], clientDetails[1], workers, false, null);
         LOGGER.info("Order Simulator has been started in automatic mode {}", Calendar.getInstance().getTime());
         Scanner scanner = new Scanner(System.in);
-        LOGGER.warn("Enter exit to stop automatic mode ");
+        LOGGER.warn("Enter to stop automatic mode...");
         String run = scanner.nextLine();
-        while (!run.equals("exit")) {
+        while (run.isEmpty()) {
+            LOGGER.warn("Turning down application...");
             orderSimulator.shutDown();
-            System.exit(-1);
         }
     }
 
-    private static boolean isStopManual(String data, boolean stopManual) {
-        if (data.equals("exit")) {
-            stopManual = false;
-            System.exit(-1);
-        }
-        return stopManual;
-    }
 }
