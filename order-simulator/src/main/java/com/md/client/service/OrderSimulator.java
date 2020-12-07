@@ -10,7 +10,10 @@ import org.slf4j.LoggerFactory;
 import javax.jms.JMSException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 public class OrderSimulator {
     private boolean kafka;
@@ -37,7 +40,9 @@ public class OrderSimulator {
     public void startSimulatorInAutomaticMode(final String[] symbols, final String exchange, final String brokerName, final String brokerId, final String clientId, final String clientName, int workers, boolean manualMode, BlockingQueue<Order> inputQueue) throws JMSException {
         workerThreads = new ArrayList<>();
         for (int i = 0; i < workers; i++) {
-            OrderSender senderEMS = new OrderSender(serverUrl, topic, symbols, exchange, brokerName, brokerId, clientId, clientName, kafka,throughputWorker, manualMode, inputQueue);
+            OrderSender senderEMS = new OrderSender(serverUrl, topic, symbols, exchange,
+                    brokerName, brokerId, clientId, clientName,
+                    kafka,throughputWorker, manualMode, inputQueue);
             workerThreads.add(senderEMS);
         }
         workerThreads.forEach(t -> service.submit(t));

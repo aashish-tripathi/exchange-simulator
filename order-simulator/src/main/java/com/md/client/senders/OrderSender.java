@@ -6,10 +6,7 @@ import com.md.client.broker.KafkaBroker;
 import com.md.client.service.PriceRange;
 import com.md.client.util.Throughput;
 import com.md.client.util.Utility;
-import org.apache.kafka.clients.producer.Callback;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.clients.producer.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +14,8 @@ import javax.jms.ExceptionListener;
 import javax.jms.JMSException;
 import javax.jms.TextMessage;
 import java.util.Base64;
+import java.util.Properties;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class OrderSender implements Runnable, ExceptionListener {
@@ -34,10 +33,15 @@ public class OrderSender implements Runnable, ExceptionListener {
     private boolean kafka;
     private KafkaProducer<String, String> kafkaProducer;
     private Throughput throughput;
+    private boolean manualMode;
+    private BlockingQueue<Order> inputQueue;
+
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderSender.class);
 
-    public OrderSender(String serverUrl, String topic, String[] symbols, String exchange, String brokerName, String brokerId, String clientId, String clientName, boolean kafka, Throughput throughputWorker) throws JMSException {
+    public OrderSender(String serverUrl, String topic, String[] symbols, String exchange,
+                       String brokerName, String brokerId, String clientId, String clientName,
+                       boolean kafka, Throughput throughputWorker,boolean manualMode, BlockingQueue<Order> inputQueue) throws JMSException {
         this.kafka = kafka;
         this.topic = topic;
         this.symbols = symbols;
@@ -50,9 +54,16 @@ public class OrderSender implements Runnable, ExceptionListener {
             emsBroker = new EMSBroker(null, null, null);
             emsBroker.createProducer(topic, true);
         } else {
-            kafkaProducer = new KafkaBroker(serverUrl).createProducer((null)); // create producer
+            Properties optionProperties = new Properties();
+            optionProperties.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
+            optionProperties.put(ProducerConfig.ACKS_CONFIG, "all");
+            optionProperties.put(ProducerConfig.RETRIES_CONFIG,Integer.toString(Integer.MAX_VALUE));
+            optionProperties.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "5");
+            kafkaProducer = new KafkaBroker(serverUrl).createProducer((optionProperties)); // create producer
         }
         this.throughput = throughputWorker;
+        this.manualMode=manualMode;
+        this.inputQueue = inputQueue;
         LOGGER.info("Order sending started by client {} ", clientName);
     }
 
@@ -64,7 +75,13 @@ public class OrderSender implements Runnable, ExceptionListener {
         while (isRunning()) {
             try {
                 String randomStock = symbols[localRandom.nextInt(symbols.length)];
-                Order newOrder = OrderCreator.createSingleOrder(randomStock, exchange, brokerName, brokerId, clientId, clientName);
+                Order newOrder = null;
+                if(manualMode){
+                    // take it from Queue
+                    newOrder = inputQueue.poll();
+                }else{
+                    newOrder = OrderCreator.createSingleOrder(randomStock, exchange, brokerName, brokerId, clientId, clientName);
+                }
                 if (newOrder == null) {
                     continue;
                 }

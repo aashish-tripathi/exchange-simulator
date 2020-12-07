@@ -26,15 +26,19 @@ public class OrderCreator {
         double lowerCircuit = circuit.getLowerCircuit();
         double upperCircuit = circuit.getUpperCircuit();
         if (sendingPrice >= lowerCircuit && sendingPrice <= upperCircuit && spreadValidity(sendingPrice)) {
+            long qty =  random.nextLong(5000);
             order = Order.newBuilder()
                     .setSymbol(symbol.toString())
                     .setExchange(exchange).setBrokerId(brokerId)
                     .setBrokerName(brokerName)
                     .setBrokerId(brokerId)
                     .setClientId(clientId)
-                    .setQuantity(random.nextLong(5000))
+                    .setQuantity(qty)
                     .setLimitPrice(sendingPrice)
                     .setSide(random.nextInt(1, 3))
+                    .setOrderStatus("open")
+                    .setFilledQuantity(0l)
+                    .setRemainingQuantity(qty)
                     .setOrdertime(Calendar.getInstance().getTimeInMillis())
                     .setOrderId(UUID.randomUUID().toString())
                     .setClientName(clientName).build();
