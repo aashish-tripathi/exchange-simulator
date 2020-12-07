@@ -12,7 +12,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.Scanner;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -47,29 +47,44 @@ public class StartMatchingEngineApp {
         ExecutorService service = Executors.newFixedThreadPool(10, new ThreadFactory() {
             @Override
             public Thread newThread(Runnable r) {
-                Thread t = new Thread(r, "Order Consumer ");
-                t.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-                    @Override
-                    public void uncaughtException(Thread t, Throwable e) {
-                        LoggerFactory.getLogger(t.getName()).error(e.getMessage(), e);
-                    }
-                });
+                Thread t = new Thread(r, "Order Consumer...");
+                t.setUncaughtExceptionHandler((t1, e) -> LoggerFactory.getLogger(t1.getName()).error(e.getMessage(), e));
                 return t;
             }
         });
         final OrderBookManager orderBookManager = new OrderBookManager(serverUrl, tradeTopic, quoteTopic, marketPriceTopic, marketByPriceTopic, executionTopic, kafkaAsCarrier);
+        final CountDownLatch latch = new CountDownLatch(workers);
         final List<OrderReceiver> receivers = new ArrayList<>();
         for (int i = 0; i < workers; i++) {
-            OrderReceiver orderReceiver = new OrderReceiver(serverUrl, orderTopic, orderBookManager, kafkaAsCarrier);
+            OrderReceiver orderReceiver = new OrderReceiver(serverUrl, orderTopic, orderBookManager, kafkaAsCarrier,latch);
             receivers.add(orderReceiver);
         }
         receivers.forEach(r -> service.submit(r));
         LOGGER.info("{} OrderReceivers has started...", workers);
 
+        Runtime.getRuntime().addShutdownHook(new Thread(()->{
+            receivers.forEach(r->r.shutdown());
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            LOGGER.info("Application has exited...");
+        }));
+
+        try {
+            latch.await();
+        }catch (Exception e){
+            LOGGER.error("Application got interrupted!");
+        }finally {
+            LOGGER.error("Application is closing!");
+        }
+/*
         Scanner scanner = new Scanner(System.in);
         LOGGER.warn("Enter to stop this engine...");
         scanner.nextLine();
         receivers.forEach(r -> r.setRunning(false));
+*/
 
     }
 }

@@ -4,7 +4,6 @@ import com.ashish.marketdata.avro.Order;
 import com.simulator.broker.EMSBroker;
 import com.simulator.broker.KafkaBroker;
 import com.simulator.service.BookManager;
-import com.simulator.util.Constant;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
@@ -12,14 +11,19 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.*;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.Session;
+import javax.jms.TextMessage;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.concurrent.CountDownLatch;
 
 public class OrderReceiver implements Runnable {
 
@@ -28,14 +32,16 @@ public class OrderReceiver implements Runnable {
     private String topic;
     private EMSBroker emsBroker;
     private KafkaConsumer<String, String> kafkaConsumer;
+    private CountDownLatch latch;
     private volatile boolean running = true;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderReceiver.class);
 
-    public OrderReceiver(String serverUrl, String topic, BookManager bookManager, boolean kafka) throws JMSException {
+    public OrderReceiver(String serverUrl, String topic, BookManager bookManager, boolean kafka, CountDownLatch latch) throws JMSException {
         this.topic = topic;
         this.kafka = kafka;
         this.bookManager = bookManager;
+        this.latch=latch;
         if (!kafka) {
             emsBroker = new EMSBroker(serverUrl, null, null);
             emsBroker.createConsumer(topic, true);
@@ -53,21 +59,29 @@ public class OrderReceiver implements Runnable {
                 try {
                     consumeFromEMS();
                 } catch (JMSException e) {
-                    LOGGER.error(e.getLocalizedMessage());
+                    LOGGER.error(Thread.currentThread().getId()+" Received shutdown signal");
+                    try {
+                        emsBroker.closeConsumer();
+                    } catch (JMSException jmsException) {
+                        jmsException.printStackTrace();
+                    }
+                }finally {
+                    latch.countDown();
                 }
             } else {
                 try {
                     consumeFromKafka();
-                } catch (Exception e) {
-                    LOGGER.error(e.getLocalizedMessage());
+                } catch (WakeupException | JMSException e) {
+                    LOGGER.error(Thread.currentThread().getId()+" Received shutdown signal");
+                    kafkaConsumer.close();
+                }finally {
+                    latch.countDown();
                 }
             }
         }
-        LOGGER.warn("Thread {} received shutdown signal ", Thread.currentThread().getId());
-        LOGGER.warn("Thread {} shutdown completed ", Thread.currentThread().getId());
     }
 
-    private void consumeFromKafka() throws JMSException {
+    private void consumeFromKafka() throws WakeupException, JMSException {
         ConsumerRecords<String, String> records = kafkaConsumer.poll(Duration.ofMillis(10));
         for (ConsumerRecord<String, String> record : records) {
             String symbol = record.key();
@@ -111,5 +125,9 @@ public class OrderReceiver implements Runnable {
 
     public void setRunning(boolean running) {
         this.running = running;
+    }
+
+    public void shutdown(){
+        kafkaConsumer.wakeup();
     }
 }

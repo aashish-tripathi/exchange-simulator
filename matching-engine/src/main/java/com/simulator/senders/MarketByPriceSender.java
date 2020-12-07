@@ -1,6 +1,9 @@
 package com.simulator.senders;
 
-import com.ashish.marketdata.avro.*;
+import com.ashish.marketdata.avro.AskDepth;
+import com.ashish.marketdata.avro.BidDepth;
+import com.ashish.marketdata.avro.MarketByPrice;
+import com.ashish.marketdata.avro.Order;
 import com.simulator.broker.EMSBroker;
 import com.simulator.broker.KafkaBroker;
 import org.apache.avro.io.DatumWriter;
@@ -19,7 +22,6 @@ import javax.jms.TextMessage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;

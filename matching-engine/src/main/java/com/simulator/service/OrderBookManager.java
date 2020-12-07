@@ -2,18 +2,13 @@ package com.simulator.service;
 
 
 import com.ashish.marketdata.avro.Order;
-import com.simulator.receivers.OrderReceiver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jms.JMSException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class OrderBookManager implements BookManager {
     private String serverUrl;

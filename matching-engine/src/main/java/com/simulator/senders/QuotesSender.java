@@ -1,7 +1,6 @@
 package com.simulator.senders;
 
 import com.ashish.marketdata.avro.Quote;
-import com.ashish.marketdata.avro.Trade;
 import com.simulator.broker.EMSBroker;
 import com.simulator.broker.KafkaBroker;
 import org.apache.avro.io.DatumWriter;
