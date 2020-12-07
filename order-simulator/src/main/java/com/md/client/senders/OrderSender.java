@@ -54,12 +54,13 @@ public class OrderSender implements Runnable, ExceptionListener {
             emsBroker = new EMSBroker(null, null, null);
             emsBroker.createProducer(topic, true);
         } else {
-            Properties optionProperties = new Properties();
-            optionProperties.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
-            optionProperties.put(ProducerConfig.ACKS_CONFIG, "all");
-            optionProperties.put(ProducerConfig.RETRIES_CONFIG,Integer.toString(Integer.MAX_VALUE));
-            optionProperties.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "5");
-            kafkaProducer = new KafkaBroker(serverUrl).createProducer((optionProperties)); // create producer
+            // safe producer
+            Properties optionalProperties = new Properties();
+            optionalProperties.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
+            optionalProperties.put(ProducerConfig.ACKS_CONFIG, "all");
+            optionalProperties.put(ProducerConfig.RETRIES_CONFIG,Integer.toString(Integer.MAX_VALUE));
+            optionalProperties.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "5");
+            kafkaProducer = new KafkaBroker(serverUrl).createProducer((optionalProperties)); // create producer
         }
         this.throughput = throughputWorker;
         this.manualMode=manualMode;
