@@ -7,10 +7,7 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumWriter;
-import org.apache.kafka.clients.producer.Callback;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.clients.producer.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +17,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Base64;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -43,7 +41,13 @@ public class TradesSender implements Runnable {
             emsBroker = new EMSBroker(null, null, null);
             emsBroker.createProducer(topic, true);
         } else {
-            kafkaProducer = new KafkaBroker(serverUrl).createProducer((null)); // create producer
+            // safe producer
+            Properties optionalProperties = new Properties();
+            optionalProperties.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
+            optionalProperties.put(ProducerConfig.ACKS_CONFIG, "all");
+            optionalProperties.put(ProducerConfig.RETRIES_CONFIG,Integer.toString(Integer.MAX_VALUE));
+            optionalProperties.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "5");
+            kafkaProducer = new KafkaBroker(serverUrl).createProducer((optionalProperties)); // create producer
         }
         new Thread(this).start();
         LOGGER.info("TradesSender has started for stock {} ", symbol);

@@ -10,10 +10,7 @@ import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumWriter;
-import org.apache.kafka.clients.producer.Callback;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.clients.producer.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +43,12 @@ public class MarketByPriceSender implements Runnable{
             emsBroker = new EMSBroker(null, null, null);
             emsBroker.createProducer(topic, true);
         }else{
-            kafkaProducer = new KafkaBroker(serverUrl).createProducer((null)); // create producer
+            Properties optionalProperties = new Properties();
+            optionalProperties.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
+            optionalProperties.put(ProducerConfig.ACKS_CONFIG, "all");
+            optionalProperties.put(ProducerConfig.RETRIES_CONFIG,Integer.toString(Integer.MAX_VALUE));
+            optionalProperties.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "5");
+            kafkaProducer = new KafkaBroker(serverUrl).createProducer((optionalProperties)); // create producer
         }
         new Thread(this).start();
         LOGGER.info("MarketByPriceSender has started {}"+symbol);
