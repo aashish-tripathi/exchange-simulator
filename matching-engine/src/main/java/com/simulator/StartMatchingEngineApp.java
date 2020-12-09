@@ -41,7 +41,7 @@ public class StartMatchingEngineApp {
         final String quoteTopic = properties.getProperty("exsim.nse.quotestopic");
         final String marketPriceTopic = properties.getProperty("exsim.nse.marketpricetopic");
         final String marketByPriceTopic = properties.getProperty("exsim.nse.marketbypricetopic");
-        final String executionTopic = properties.getProperty("exsim.nse.marketbypricetopic");
+        final String executionTopic = properties.getProperty("exsim.nse.executionstopic");
         final int workers = Integer.parseInt(properties.getProperty("exsim.nse.consumer.threads"));
 
         ExecutorService service = Executors.newFixedThreadPool(10, new ThreadFactory() {
@@ -79,12 +79,5 @@ public class StartMatchingEngineApp {
         }finally {
             LOGGER.error("Application is closing!");
         }
-/*
-        Scanner scanner = new Scanner(System.in);
-        LOGGER.warn("Enter to stop this engine...");
-        scanner.nextLine();
-        receivers.forEach(r -> r.setRunning(false));
-*/
-
     }
 }

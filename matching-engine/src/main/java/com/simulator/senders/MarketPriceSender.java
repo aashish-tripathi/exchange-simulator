@@ -95,10 +95,10 @@ public class MarketPriceSender implements Runnable {
             @Override
             public void onCompletion(RecordMetadata recordMetadata, Exception e) {
                 if(e==null){
-                    LOGGER.info("Key {}" ,symbol);
+                   /* LOGGER.info("Key {}" ,symbol);
                     LOGGER.info("Topic {} " ,recordMetadata.topic());
                     LOGGER.info("Partition {}" ,recordMetadata.partition());
-                    LOGGER.info("Offset {}" ,recordMetadata.offset());
+                    LOGGER.info("Offset {}" ,recordMetadata.offset());*/
                 }else{
                     LOGGER.info("Exception Occurred while sending order through kafka... {}", e.getLocalizedMessage());
                 }

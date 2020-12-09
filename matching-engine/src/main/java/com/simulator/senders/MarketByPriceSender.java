@@ -30,7 +30,6 @@ public class MarketByPriceSender implements Runnable{
     private String topic;
     private EMSBroker emsBroker;
     private KafkaProducer<String, String> kafkaProducer;
-    private Map<String, MarketByPrice> marketPriceMap = new ConcurrentHashMap<>();
     private BlockingQueue<MarketByPrice> marketByPriceQueue = new LinkedBlockingQueue<>();
     private MarketByPrice lastSnapshot;
 
@@ -57,7 +56,6 @@ public class MarketByPriceSender implements Runnable{
     @Override
     public void run() {
         while (isRunning()) {
-
             MarketByPrice marketByPrice = marketByPriceQueue.poll();
             if (marketByPrice != null) {
                 byte[] encoded = serealizeAvroHttpRequestJSON(marketByPrice);
@@ -76,15 +74,16 @@ public class MarketByPriceSender implements Runnable{
 
     private void publishToKafka(MarketByPrice marketByPrice, String encodedMarketByPrice) {
         String symbol = marketByPrice.getSymbol().toString();
+        System.out.println("Check&&& "+encodedMarketByPrice);
         ProducerRecord<String,String> producerRecord = new ProducerRecord<String,String>(topic,symbol, encodedMarketByPrice);
         kafkaProducer.send(producerRecord, new Callback() {
             @Override
             public void onCompletion(RecordMetadata recordMetadata, Exception e) {
                 if(e==null){
-                    LOGGER.info("Key {}" ,symbol);
+                   /* LOGGER.info("Key {}" ,symbol);
                     LOGGER.info("Topic {} " ,recordMetadata.topic());
                     LOGGER.info("Partition {}" ,recordMetadata.partition());
-                    LOGGER.info("Offset {}" ,recordMetadata.offset());
+                    LOGGER.info("Offset {}" ,recordMetadata.offset());*/
                 }else{
                     LOGGER.info("Exception Occurred while sending MarketByPrice through kafka... {}", e.getLocalizedMessage());
                 }
@@ -103,22 +102,22 @@ public class MarketByPriceSender implements Runnable{
         }
     }
 
-    public void addORUpdateOrderBook(String symbol, NavigableMap<Double, BlockingQueue<Order>> buyOrders, NavigableMap<Double, BlockingQueue<Order>> sellOrders){
+    public void addORUpdateOrderBook(String symbol, NavigableMap<Double, BlockingQueue<Order>> buyOrdersMap, NavigableMap<Double, BlockingQueue<Order>> sellOrdersMap){
         MarketByPrice marketByPrice = new MarketByPrice();
         marketByPrice.setSymbol(symbol);
-        marketByPrice.setAskList(new ArrayList<>());
         marketByPrice.setBidList(new ArrayList<>());
+        marketByPrice.setAskList(new ArrayList<>());
 
         int buylimit = 0;
-        Iterator<Double> buyIterator = buyOrders.descendingKeySet().iterator();
+        Iterator<Double> buyIterator = buyOrdersMap.descendingKeySet().iterator();
         while (buyIterator.hasNext()) {
             double buyPrice = buyIterator.next();
-            BlockingQueue<Order> buyOrder = buyOrders.get(buyPrice);
+            BlockingQueue<Order> buyOrder = buyOrdersMap.get(buyPrice);
             long qty = getTotalQty(buyOrder);
             if (qty == 0) {
                 //buyIterator.remove();
             } else {
-                marketByPrice.getBidList().add(new BidDepth(buyPrice, qty));
+                marketByPrice.getBidList().add(new BidDepth(buyPrice, qty, new Long(buyOrder.size())));
             }
             buylimit++;
             if(buylimit==10){
@@ -127,19 +126,22 @@ public class MarketByPriceSender implements Runnable{
         }
 
         int selllimit = 0;
-        Iterator<Double> sellIterator = sellOrders.navigableKeySet().iterator();
+        Iterator<Double> sellIterator = sellOrdersMap.navigableKeySet().iterator();
         while (sellIterator.hasNext()) {
             double sellPrice = sellIterator.next();
-            BlockingQueue<Order> sellOrder = sellOrders.get(sellPrice);
+            BlockingQueue<Order> sellOrder = sellOrdersMap.get(sellPrice);
             long qty = getTotalQty(sellOrder);
             if (qty == 0) {
                 //sellIterator.remove();
             } else {
-                marketByPrice.getAskList().add(new AskDepth(sellPrice, qty));
+                marketByPrice.getAskList().add(new AskDepth(sellPrice, qty, new Long(sellOrder.size())));
             }
             if(selllimit==10){
                 break;
             }
+        }
+        if(marketByPrice.getBidList().isEmpty() && marketByPrice.getAskList().isEmpty()){
+            return;
         }
         marketByPriceQueue.add(marketByPrice); // update new depth
     }
@@ -169,7 +171,7 @@ public class MarketByPriceSender implements Runnable{
         if(value!=null) {
             Iterator<Order> orders = value.iterator();
             while (orders.hasNext()) {
-                qty += orders.next().getQuantity();
+                qty += orders.next().getRemainingQuantity();
             }
         }
         return qty;

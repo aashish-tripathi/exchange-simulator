@@ -60,6 +60,11 @@ public class OrderSender implements Runnable, ExceptionListener {
             optionalProperties.put(ProducerConfig.ACKS_CONFIG, "all");
             optionalProperties.put(ProducerConfig.RETRIES_CONFIG,Integer.toString(Integer.MAX_VALUE));
             optionalProperties.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "5");
+
+            // high throughput setting
+            optionalProperties.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "snappy");
+            optionalProperties.put(ProducerConfig.LINGER_MS_CONFIG, "20");
+            optionalProperties.put(ProducerConfig.BATCH_SIZE_CONFIG, Integer.toString(32*1024));
             kafkaProducer = new KafkaBroker(serverUrl).createProducer((optionalProperties)); // create producer
         }
         this.throughput = throughputWorker;
@@ -121,10 +126,10 @@ public class OrderSender implements Runnable, ExceptionListener {
             @Override
             public void onCompletion(RecordMetadata recordMetadata, Exception e) {
                 if (e == null) {
-                    LOGGER.info("Key {}", symbol);
+                   /* LOGGER.info("Key {}", symbol);
                     LOGGER.info("Topic {} ", recordMetadata.topic());
                     LOGGER.info("Partition {}", recordMetadata.partition());
-                    LOGGER.info("Offset {}", recordMetadata.offset());
+                    LOGGER.info("Offset {}", recordMetadata.offset());*/
                 } else {
                     LOGGER.info("Exception Occurred while sending order through kafka... {}", e.getLocalizedMessage());
                 }

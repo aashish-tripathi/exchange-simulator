@@ -4,16 +4,14 @@ import com.ashish.marketdata.avro.MarketPrice;
 import com.ashish.marketdata.avro.Order;
 import com.ashish.marketdata.avro.Quote;
 import com.ashish.marketdata.avro.Trade;
-import com.simulator.senders.MarketByPriceSender;
-import com.simulator.senders.MarketPriceSender;
-import com.simulator.senders.QuotesSender;
-import com.simulator.senders.TradesSender;
+import com.simulator.senders.*;
 import com.simulator.util.Constant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jms.JMSException;
 import java.util.Calendar;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -22,6 +20,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 public class OrderMatchingEngine implements Runnable {
 
     private volatile boolean running = true;
+    private final String exchange;
     private final String symbol;
     private final NavigableMap<Double, BlockingQueue<Order>> buyOrders;
     private final NavigableMap<Double, BlockingQueue<Order>> sellOrders;
@@ -31,19 +30,20 @@ public class OrderMatchingEngine implements Runnable {
     private final QuotesSender quoteEngine;
     private final MarketPriceSender marketPriceEngine;
     private final MarketByPriceSender marketByPriceSender;
-    //private final ExecutionsSender executionsSender;
+    private final ExecutionsSender executionsSender;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderMatchingEngine.class);
 
     public OrderMatchingEngine(String serverUrl, String symbol, String tradeTopic, String quoteTopic, String marketPriceTopic, String marketByPriceTopic, String executionsTopic, boolean kafka) throws JMSException {
         this.symbol = symbol;
+        this.exchange = "NSE";
         this.buyOrders = new ConcurrentSkipListMap<>();
         this.sellOrders = new ConcurrentSkipListMap<>();
         this.tradeEngine = new TradesSender(serverUrl, tradeTopic, symbol, kafka);
         this.quoteEngine = new QuotesSender(serverUrl, quoteTopic, symbol, kafka);
         this.marketPriceEngine = new MarketPriceSender(serverUrl, marketPriceTopic, symbol, kafka);
         this.marketByPriceSender = new MarketByPriceSender(serverUrl, marketByPriceTopic, symbol, kafka);
-        //this.executionsSender = new ExecutionsSender(serverUrl, marketByPriceTopic, symbol, kafka);
+        this.executionsSender = new ExecutionsSender(serverUrl, executionsTopic, symbol, kafka);
         new Thread(this).start();
     }
 
@@ -65,7 +65,7 @@ public class OrderMatchingEngine implements Runnable {
                 sellOrderQueue.add(order);
             }
         }
-        marketByPriceSender.addORUpdateOrderBook(order.getSymbol().toString(), buyOrders, sellOrders); // send book
+        marketByPriceSender.addORUpdateOrderBook(order.getSymbol().toString(), getBuyOrders(), getSellOrders()); // send book
     }
 
     private void getModifiedQueue(BlockingQueue<Order> orderQueueByPrice, Order order) {
@@ -82,15 +82,20 @@ public class OrderMatchingEngine implements Runnable {
             NavigableMap<Double, BlockingQueue<Order>> buyMap = getBuyOrders();
             NavigableMap<Double, BlockingQueue<Order>> sellMap = getSellOrders();
             if (!buyMap.isEmpty() && !sellMap.isEmpty()) {
-                double buyPrice = buyMap.descendingKeySet().iterator().next();
-                double sellPrice = sellMap.navigableKeySet().iterator().next();
-                BlockingQueue<Order> buyQueue = buyMap.get(buyPrice);
-                BlockingQueue<Order> sellQueue = sellMap.get(sellPrice);
-                Order buyOrd = buyQueue.peek();
-                Order sellOrd = sellQueue.peek();
-                boolean match = match(buyOrd, sellOrd);
+                Map.Entry<Double, BlockingQueue<Order>> buyEntry = buyMap.lastEntry();
+                Map.Entry<Double, BlockingQueue<Order>> selEntry = sellMap.firstEntry();
+                double buyPrice = buyEntry.getKey();
+                double sellPrice = selEntry.getKey();
+                BlockingQueue<Order> buyOrders = buyEntry.getValue();
+                BlockingQueue<Order> sellOrders = selEntry.getValue();
+                boolean match = match(buyPrice, sellPrice) && !buyOrders.isEmpty() && !sellOrders.isEmpty();
                 if (match) {
-                    executeTransaction(buyMap, sellMap, buyPrice, sellPrice, buyQueue, sellQueue, buyOrd, sellOrd);
+                    System.out.println("Match found for stock " + symbol);
+                    final long buyQty = getTotalQty(buyOrders);
+                    final long sellQty = getTotalQty(sellOrders);
+                    addQuote(buyPrice, buyQty, sellPrice, sellQty);
+                    execute(buyMap, sellMap, buyPrice, buyOrders, sellOrders);
+                    marketByPriceSender.addORUpdateOrderBook(symbol, getBuyOrders(), getSellOrders()); // send book
                 }
             }
         }
@@ -98,69 +103,107 @@ public class OrderMatchingEngine implements Runnable {
         LOGGER.warn("Thread {} shutdown completed ", Thread.currentThread().getId());
     }
 
-    private void executeTransaction(NavigableMap<Double, BlockingQueue<Order>> buyMap, NavigableMap<Double, BlockingQueue<Order>> sellMap, double buyPrice, double sellPrice, BlockingQueue<Order> buyQueue, BlockingQueue<Order> sellQueue, Order buyOrd, Order sellOrd) {
-        System.err.println("Match found for stock " + buyOrd.getSymbol());
-        addQuote(buyOrd, sellOrd);
-        long bQty = buyOrd.getQuantity();
-        long sQty = sellOrd.getQuantity();
-        if (bQty > sQty) {
-            long remQty = bQty - sQty;
-            marketPriceUpdate(sellOrd);
-            buyOrd.setQuantity(remQty);
-            addTrade(buyOrd, sQty);
-            if (sellQueue.size() == 1) {
-                BlockingQueue<Order> completedOrder = sellMap.get(sellPrice);
-                completedOrder.forEach(o -> {
-                    o.setOrderStatus("completed");
-                    o.setFilledQuantity(sQty);
-                    o.setRemainingQuantity(0l);
-                    //executionsSender.addExecutions(o);
-                });
-                sellMap.remove(sellPrice);
-
+    private void execute(NavigableMap<Double, BlockingQueue<Order>> buyMap, NavigableMap<Double, BlockingQueue<Order>> sellMap, double buyPrice, BlockingQueue<Order> buyOrders, BlockingQueue<Order> sellOrders) {
+        Order bOrder = buyOrders.peek();
+        Order sOrder = sellOrders.peek();
+        if (bOrder != null && sOrder != null && bOrder.getRemainingQuantity() >= sOrder.getRemainingQuantity()) {
+            long remQty = bOrder.getRemainingQuantity() - sOrder.getRemainingQuantity();
+            bOrder.setRemainingQuantity(remQty);
+            bOrder.setFilledQuantity(sOrder.getQuantity() + bOrder.getFilledQuantity());
+            if (bOrder.getFilledQuantity().equals(bOrder.getQuantity())) {
+                bOrder.setOrderStatus("completed");
             } else {
-                sellOrd.setOrderStatus("completed");
-                sellOrd.setFilledQuantity(sQty);
-                sellOrd.setRemainingQuantity(0l);
-               // executionsSender.addExecutions(sellOrd);
-                sellQueue.remove(sellOrd);// update sell position
-
+                bOrder.setOrderStatus("partial filled");
             }
-        } else if (bQty < sQty) {
-            long remQty = sQty - bQty;
-            marketPriceUpdate(buyOrd);
-            sellOrd.setQuantity(remQty);
-            addTrade(buyOrd, bQty);
-            if (buyQueue.size() == 1) {
-                BlockingQueue<Order> completedOrder = buyMap.get(buyPrice);
-                completedOrder.forEach(o -> {
-                    o.setOrderStatus("completed");
-                    o.setFilledQuantity(sQty);
-                    o.setRemainingQuantity(0l);
-                   // executionsSender.addExecutions(o);
-                });
+            executionsSender.addExecutions(bOrder);
+
+            sOrder.setFilledQuantity(sOrder.getQuantity());
+            sOrder.setRemainingQuantity(0L);
+            sOrder.setOrderStatus("completed");
+            if (sellOrders.size() == 1) {
+                sellMap.remove(buyPrice);
+            }
+            executionsSender.addExecutions(sOrder);
+            sellOrders.remove(sOrder);
+
+            marketPriceUpdate(sOrder);
+            addTrade(sOrder, sOrder.getQuantity());
+
+        } else if (bOrder != null && sOrder != null && bOrder.getRemainingQuantity() <= sOrder.getRemainingQuantity()) {
+            long remQty = sOrder.getRemainingQuantity() - bOrder.getRemainingQuantity();
+            sOrder.setRemainingQuantity(remQty);
+            sOrder.setFilledQuantity(bOrder.getQuantity() + sOrder.getFilledQuantity());
+            if (sOrder.getFilledQuantity().equals(sOrder.getQuantity())) {
+                sOrder.setOrderStatus("completed");
+            } else {
+                sOrder.setOrderStatus("partial filled");
+            }
+            executionsSender.addExecutions(sOrder);
+
+            bOrder.setFilledQuantity(bOrder.getQuantity());
+            bOrder.setRemainingQuantity(0L);
+            bOrder.setOrderStatus("completed");
+            if (buyOrders.size() == 1) {
                 buyMap.remove(buyPrice);
-            } else {
-                buyOrd.setOrderStatus("completed");
-                buyOrd.setFilledQuantity(sQty);
-                buyOrd.setRemainingQuantity(0l);
-                //executionsSender.addExecutions(sellOrd);
-                buyQueue.remove(buyOrd);// update buy position
             }
-        } else {
-            buyOrd.setOrderStatus("completed");
-            buyOrd.setFilledQuantity(sQty);
-            buyOrd.setRemainingQuantity(0l);
-            //executionsSender.addExecutions(sellOrd);
-            buyQueue.remove(buyOrd);// update buy position
-            sellOrd.setOrderStatus("completed");
-            sellOrd.setFilledQuantity(sQty);
-            sellOrd.setRemainingQuantity(0l);
-            //executionsSender.addExecutions(sellOrd);
-            sellQueue.remove(sellOrd); // update sell position
-            addTrade(buyOrd, bQty);
+            executionsSender.addExecutions(bOrder);
+            buyOrders.remove(bOrder);
+
+            marketPriceUpdate(bOrder);
+            addTrade(bOrder, bOrder.getQuantity());
         }
     }
+
+    private boolean match(double buyPrice, double sellPrice) {
+        return buyPrice >= sellPrice;
+    }
+
+    private void executeTransaction(double buyPrice, double sellPrice, BlockingQueue<Order> buyQueue, BlockingQueue<Order> sellQueue) {
+        System.err.println("Match found for stock " + symbol);
+        long buyQty = getTotalQty(buyQueue);
+        long sellQty = getTotalQty(sellQueue);
+        addQuote(buyPrice, buyQty, sellPrice, sellQty);
+        if (buyQty > sellQty) {
+            Order bOrder = buyQueue.peek();
+            Order sOrder = sellQueue.peek();
+            if (bOrder != null && sOrder != null && bOrder.getQuantity() > sOrder.getQuantity()) {
+                long remQty = bOrder.getQuantity() - sOrder.getQuantity();
+                bOrder.setRemainingQuantity(remQty);
+                bOrder.setFilledQuantity(sOrder.getQuantity());
+                bOrder.setOrderStatus("partial filled");
+
+                sOrder.setFilledQuantity(sOrder.getQuantity());
+                sOrder.setRemainingQuantity(0l);
+                sOrder.setOrderStatus("completed");
+                sellQueue.remove(sOrder);
+
+                marketPriceUpdate(sOrder);
+                addTrade(sOrder, sOrder.getQuantity());
+
+            } else if (bOrder != null && sOrder != null && bOrder.getQuantity() < sOrder.getQuantity()) {
+                long remQty = sOrder.getQuantity() - bOrder.getQuantity();
+                sOrder.setRemainingQuantity(remQty);
+                sOrder.setFilledQuantity(bOrder.getQuantity());
+                sOrder.setOrderStatus("partial filled");
+
+                bOrder.setFilledQuantity(bOrder.getQuantity());
+                bOrder.setRemainingQuantity(0l);
+                bOrder.setOrderStatus("completed");
+                buyQueue.remove(sOrder);
+
+                marketPriceUpdate(bOrder);
+                addTrade(bOrder, bOrder.getQuantity());
+            }
+            marketByPriceSender.addORUpdateOrderBook(symbol, getBuyOrders(), getSellOrders()); // send book
+
+        } else if (buyQty < sellQty) {
+
+        } else if (buyQty == sellQty) {
+
+        }
+
+    }
+
 
     private void marketPriceUpdate(Order order) {
         MarketPrice marketPrice = marketPriceEngine.marketPrice(symbol);
@@ -201,14 +244,14 @@ public class OrderMatchingEngine implements Runnable {
         tradeEngine.addTrade(trade);
     }
 
-    private void addQuote(Order buyOrd, Order sellOrder) {
+    private void addQuote(double buyPrice, long buyQty, double sellPrice, long sellQty) {
         Quote quote = new Quote();
-        quote.setBidprice(buyOrd.getLimitPrice());
-        quote.setBidsize(buyOrd.getQuantity());
-        quote.setAskprice(sellOrder.getLimitPrice());
-        quote.setAsksize(sellOrder.getQuantity());
+        quote.setBidprice(buyPrice);
+        quote.setBidsize(buyQty);
+        quote.setAskprice(sellPrice);
+        quote.setAsksize(sellQty);
         quote.setSymbol(symbol);
-        quote.setExchange(buyOrd.getExchange());
+        quote.setExchange(exchange);
         quote.setTime(Calendar.getInstance().getTimeInMillis());
         quoteEngine.addQuote(quote);
     }
@@ -264,9 +307,10 @@ public class OrderMatchingEngine implements Runnable {
     private long getTotalQty(BlockingQueue<Order> value) {
         long qty = 0;
         for (Order order : value) {
-            qty += order.getQuantity();
+            qty += order.getRemainingQuantity();
         }
         return qty;
 
     }
 }
+

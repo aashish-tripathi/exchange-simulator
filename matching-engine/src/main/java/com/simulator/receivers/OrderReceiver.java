@@ -66,7 +66,7 @@ public class OrderReceiver implements Runnable {
                         jmsException.printStackTrace();
                     }
                 }finally {
-                    latch.countDown();
+                    //latch.countDown();
                 }
             } else {
                 try {
@@ -75,7 +75,7 @@ public class OrderReceiver implements Runnable {
                     LOGGER.error(Thread.currentThread().getId()+" Received shutdown signal");
                     kafkaConsumer.close();
                 }finally {
-                    latch.countDown();
+                   // latch.countDown();
                 }
             }
         }

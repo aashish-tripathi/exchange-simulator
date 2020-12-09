@@ -11,8 +11,6 @@
     <modules>
         <module>order-simulator</module>
         <module>matching-engine</module>
-        <module>kafka-connector</module>
-        <module>ems-connector</module>
         <module>marketdata-schema</module>
     </modules>
     <dependencies>
