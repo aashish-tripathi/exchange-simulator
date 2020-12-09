@@ -12,7 +12,8 @@
                 "type":"record",
                 "fields":[
                     {"name":"bidPrice", "type":["double", "null"]},
-                    {"name":"bidSize", "type":["long", "null"]}
+                    {"name":"bidSize", "type":["long", "null"]},
+                    {"name":"bidOrders", "type":["long", "null"]}
                 ]
             }
         }
@@ -25,7 +26,8 @@
                   "type":"record",
                   "fields":[
                       {"name":"askPrice", "type":["double", "null"]},
-                      {"name":"askSize", "type":["long", "null"]}
+                      {"name":"askSize", "type":["long", "null"]},
+                      {"name":"askOrders", "type":["long", "null"]}
                   ]
               }
           }
