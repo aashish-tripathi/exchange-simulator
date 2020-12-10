@@ -74,16 +74,15 @@ public class MarketByPriceSender implements Runnable{
 
     private void publishToKafka(MarketByPrice marketByPrice, String encodedMarketByPrice) {
         String symbol = marketByPrice.getSymbol().toString();
-        System.out.println("Check&&& "+encodedMarketByPrice);
         ProducerRecord<String,String> producerRecord = new ProducerRecord<String,String>(topic,symbol, encodedMarketByPrice);
         kafkaProducer.send(producerRecord, new Callback() {
             @Override
             public void onCompletion(RecordMetadata recordMetadata, Exception e) {
                 if(e==null){
-                   /* LOGGER.info("Key {}" ,symbol);
+                    LOGGER.info("Key {}" ,symbol);
                     LOGGER.info("Topic {} " ,recordMetadata.topic());
                     LOGGER.info("Partition {}" ,recordMetadata.partition());
-                    LOGGER.info("Offset {}" ,recordMetadata.offset());*/
+                    LOGGER.info("Offset {}" ,recordMetadata.offset());
                 }else{
                     LOGGER.info("Exception Occurred while sending MarketByPrice through kafka... {}", e.getLocalizedMessage());
                 }

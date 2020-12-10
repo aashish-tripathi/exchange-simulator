@@ -29,7 +29,6 @@ public class ExecutionsSender implements Runnable {
     private String topic;
     private EMSBroker emsBroker;
     private KafkaProducer<String, String> kafkaProducer;
-    private Map<String, BlockingQueue<Order>> executionsMap = new ConcurrentHashMap<>();
     private BlockingQueue<Order> executions = new LinkedBlockingQueue<>();
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ExecutionsSender.class);
@@ -92,10 +91,10 @@ public class ExecutionsSender implements Runnable {
             @Override
             public void onCompletion(RecordMetadata recordMetadata, Exception e) {
                 if (e == null) {
-                    /*LOGGER.info("Key {}", symbol);
+                    LOGGER.info("Key {}", symbol);
                     LOGGER.info("Topic {} ", recordMetadata.topic());
                     LOGGER.info("Partition {}", recordMetadata.partition());
-                    LOGGER.info("Offset {}", recordMetadata.offset());*/
+                    LOGGER.info("Offset {}", recordMetadata.offset());
                 } else {
                     LOGGER.info("Exception Occurred while sending execution through kafka... {}", e.getLocalizedMessage());
                 }
