@@ -94,7 +94,7 @@ public class OrderMatchingEngine implements Runnable {
                     final long buyQty = getTotalQty(buyOrders);
                     final long sellQty = getTotalQty(sellOrders);
                     addQuote(buyPrice, buyQty, sellPrice, sellQty);
-                    execute(buyMap, sellMap, buyPrice, buyOrders, sellOrders);
+                    execute(buyMap, sellMap, buyPrice, buyOrders, sellOrders,sellPrice);
                     marketByPriceSender.addORUpdateOrderBook(symbol, getBuyOrders(), getSellOrders()); // send book
                 }
             }
@@ -103,7 +103,8 @@ public class OrderMatchingEngine implements Runnable {
         LOGGER.warn("Thread {} shutdown completed ", Thread.currentThread().getId());
     }
 
-    private void execute(NavigableMap<Double, BlockingQueue<Order>> buyMap, NavigableMap<Double, BlockingQueue<Order>> sellMap, double buyPrice, BlockingQueue<Order> buyOrders, BlockingQueue<Order> sellOrders) {
+    private void execute(NavigableMap<Double, BlockingQueue<Order>> buyMap, NavigableMap<Double, BlockingQueue<Order>> sellMap, double buyPrice, BlockingQueue<Order> buyOrders, BlockingQueue<Order> sellOrders, double sellPrice) {
+
         Order bOrder = buyOrders.peek();
         Order sOrder = sellOrders.peek();
         if (bOrder != null && sOrder != null && bOrder.getRemainingQuantity() >= sOrder.getRemainingQuantity()) {
@@ -121,7 +122,8 @@ public class OrderMatchingEngine implements Runnable {
             sOrder.setRemainingQuantity(0L);
             sOrder.setOrderStatus("completed");
             if (sellOrders.size() == 1) {
-                sellMap.remove(buyPrice);
+                sellMap.remove(sellPrice);
+                sellMap.clear();
             }
             executionsSender.addExecutions(sOrder);
             sellOrders.remove(sOrder);
@@ -145,6 +147,7 @@ public class OrderMatchingEngine implements Runnable {
             bOrder.setOrderStatus("completed");
             if (buyOrders.size() == 1) {
                 buyMap.remove(buyPrice);
+                buyMap.clear();
             }
             executionsSender.addExecutions(bOrder);
             buyOrders.remove(bOrder);
