@@ -66,6 +66,7 @@ public class OrderReceiver implements Runnable {
                         jmsException.printStackTrace();
                     }
                 }finally {
+                    System.out.println("Done");
                     //latch.countDown();
                 }
             } else {
