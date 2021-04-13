@@ -12,83 +12,15 @@
     <artifactId>order-simulator</artifactId>
     <dependencies>
         <dependency>
-            <groupId>org.apache.avro</groupId>
-            <artifactId>avro</artifactId>
-            <version>1.7.7</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.avro</groupId>
-            <artifactId>avro-tools</artifactId>
-            <version>1.7.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-            <version>2.0-rc1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.0-rc1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-            <version>2.0-rc1</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/org.quartz-scheduler/quartz -->
-        <dependency>
             <groupId>org.quartz-scheduler</groupId>
             <artifactId>quartz</artifactId>
             <version>2.3.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.0-rc1</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
             <version>RELEASE</version>
             <scope>compile</scope>
-        </dependency>
-        <!-- custom jars-->
-        <dependency>
-            <groupId>tibco-ems</groupId>
-            <artifactId>schema-1.0-SNAPSHOT</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>tibco-ems</groupId>
-            <artifactId>jms-2.0</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>tibco-ems</groupId>
-            <artifactId>tibemsd_sec</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>tibco-ems</groupId>
-            <artifactId>tibjms</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>tibco-ems</groupId>
-            <artifactId>tibjmsadmin</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>tibco-ems</groupId>
-            <artifactId>tibrvjms</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>tibco-ems</groupId>
-            <artifactId>tibjmsapps</artifactId>
-            <version>2.0</version>
         </dependency>
     </dependencies>
     <build>

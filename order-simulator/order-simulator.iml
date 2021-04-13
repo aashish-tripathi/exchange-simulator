@@ -21,13 +21,13 @@
     <orderEntry type="library" name="Maven: org.apache.avro:avro-tools:1.7.1" level="project" />
     <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-api:2.0-rc1" level="project" />
     <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-core:2.0-rc1" level="project" />
-    <orderEntry type="library" name="Maven: org.md:org.md.schema:1.0-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: org.md:org.md.jms:2.0" level="project" />
-    <orderEntry type="library" name="Maven: org.md:org.md.tibsec:2.0" level="project" />
-    <orderEntry type="library" name="Maven: org.md:org.md.tibjms:2.0" level="project" />
-    <orderEntry type="library" name="Maven: org.md:org.md.tibjmsadmin:2.0" level="project" />
-    <orderEntry type="library" name="Maven: org.md:org.md.tibrvjms:2.0" level="project" />
-    <orderEntry type="library" name="Maven: org.md:org.md.tibjmsapps:2.0" level="project" />
+    <orderEntry type="library" name="Maven: tibco-ems:schema-1.0-SNAPSHOT:2.0" level="project" />
+    <orderEntry type="library" name="Maven: tibco-ems:jms-2.0:2.0" level="project" />
+    <orderEntry type="library" name="Maven: tibco-ems:tibemsd_sec:2.0" level="project" />
+    <orderEntry type="library" name="Maven: tibco-ems:tibjms:2.0" level="project" />
+    <orderEntry type="library" name="Maven: tibco-ems:tibjmsadmin:2.0" level="project" />
+    <orderEntry type="library" name="Maven: tibco-ems:tibrvjms:2.0" level="project" />
+    <orderEntry type="library" name="Maven: tibco-ems:tibjmsapps:2.0" level="project" />
     <orderEntry type="library" name="Maven: org.quartz-scheduler:quartz:2.3.2" level="project" />
     <orderEntry type="library" name="Maven: com.mchange:c3p0:0.9.5.4" level="project" />
     <orderEntry type="library" name="Maven: com.mchange:mchange-commons-java:0.2.15" level="project" />
