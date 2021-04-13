@@ -17,74 +17,72 @@
             <artifactId>avro</artifactId>
             <version>1.7.7</version>
         </dependency>
-
         <dependency>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro-tools</artifactId>
             <version>1.7.1</version>
         </dependency>
-
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
             <version>2.0-rc1</version>
         </dependency>
-
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
             <version>2.0-rc1</version>
         </dependency>
         <dependency>
-            <groupId>org.md</groupId>
-            <artifactId>org.md.schema</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.0-rc1</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.0-rc1</version>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
             <version>2.5.0</version>
         </dependency>
-
+        <!-- custom jars-->
         <dependency>
-            <groupId>org.md</groupId>
-            <artifactId>org.md.jms</artifactId>
+            <groupId>tibco-ems</groupId>
+            <artifactId>schema-1.0-SNAPSHOT</artifactId>
             <version>2.0</version>
         </dependency>
         <dependency>
-            <groupId>org.md</groupId>
-            <artifactId>org.md.tibsec</artifactId>
+            <groupId>tibco-ems</groupId>
+            <artifactId>jms-2.0</artifactId>
             <version>2.0</version>
         </dependency>
         <dependency>
-            <groupId>org.md</groupId>
-            <artifactId>org.md.tibjms</artifactId>
+            <groupId>tibco-ems</groupId>
+            <artifactId>tibemsd_sec</artifactId>
             <version>2.0</version>
         </dependency>
         <dependency>
-            <groupId>org.md</groupId>
-            <artifactId>org.md.tibjmsadmin</artifactId>
+            <groupId>tibco-ems</groupId>
+            <artifactId>tibjms</artifactId>
             <version>2.0</version>
         </dependency>
         <dependency>
-            <groupId>org.md</groupId>
-            <artifactId>org.md.tibrvjms</artifactId>
+            <groupId>tibco-ems</groupId>
+            <artifactId>tibjmsadmin</artifactId>
             <version>2.0</version>
         </dependency>
         <dependency>
-            <groupId>org.md</groupId>
-            <artifactId>org.md.tibjmsapps</artifactId>
+            <groupId>tibco-ems</groupId>
+            <artifactId>tibrvjms</artifactId>
             <version>2.0</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-            <version>2.0-rc1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.0-rc1</version>
+            <groupId>tibco-ems</groupId>
+            <artifactId>tibjmsapps</artifactId>
+            <version>2.0</version>
         </dependency>
     </dependencies>
     <build>

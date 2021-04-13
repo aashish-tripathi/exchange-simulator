@@ -16,7 +16,6 @@
             <artifactId>avro</artifactId>
             <version>1.7.7</version>
         </dependency>
-
         <dependency>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro-tools</artifactId>
@@ -28,47 +27,10 @@
             <artifactId>log4j-api</artifactId>
             <version>2.0-rc1</version>
         </dependency>
-
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
             <version>2.0-rc1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.md</groupId>
-            <artifactId>org.md.schema</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.md</groupId>
-            <artifactId>org.md.jms</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.md</groupId>
-            <artifactId>org.md.tibsec</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.md</groupId>
-            <artifactId>org.md.tibjms</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.md</groupId>
-            <artifactId>org.md.tibjmsadmin</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.md</groupId>
-            <artifactId>org.md.tibrvjms</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.md</groupId>
-            <artifactId>org.md.tibjmsapps</artifactId>
-            <version>2.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -81,7 +43,6 @@
             <artifactId>quartz</artifactId>
             <version>2.3.2</version>
         </dependency>
-
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
@@ -92,6 +53,42 @@
             <artifactId>annotations</artifactId>
             <version>RELEASE</version>
             <scope>compile</scope>
+        </dependency>
+        <!-- custom jars-->
+        <dependency>
+            <groupId>tibco-ems</groupId>
+            <artifactId>schema-1.0-SNAPSHOT</artifactId>
+            <version>2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>tibco-ems</groupId>
+            <artifactId>jms-2.0</artifactId>
+            <version>2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>tibco-ems</groupId>
+            <artifactId>tibemsd_sec</artifactId>
+            <version>2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>tibco-ems</groupId>
+            <artifactId>tibjms</artifactId>
+            <version>2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>tibco-ems</groupId>
+            <artifactId>tibjmsadmin</artifactId>
+            <version>2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>tibco-ems</groupId>
+            <artifactId>tibrvjms</artifactId>
+            <version>2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>tibco-ems</groupId>
+            <artifactId>tibjmsapps</artifactId>
+            <version>2.0</version>
         </dependency>
     </dependencies>
     <build>
@@ -104,6 +101,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
