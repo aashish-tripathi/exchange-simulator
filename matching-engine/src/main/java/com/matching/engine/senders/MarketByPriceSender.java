@@ -1,11 +1,11 @@
-package com.simulator.senders;
+package com.matching.engine.senders;
 
 import com.ashish.marketdata.avro.AskDepth;
 import com.ashish.marketdata.avro.BidDepth;
 import com.ashish.marketdata.avro.MarketByPrice;
 import com.ashish.marketdata.avro.Order;
-import com.simulator.broker.EMSBroker;
-import com.simulator.broker.KafkaBroker;
+import com.matching.engine.broker.EMSBroker;
+import com.matching.engine.broker.KafkaBroker;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
@@ -20,7 +20,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class MarketByPriceSender implements Runnable{

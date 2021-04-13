@@ -1,4 +1,4 @@
-package com.simulator.util;
+package com.matching.engine.util;
 
 public class Constant {
     public static final int BUY=1;

@@ -1,8 +1,8 @@
-package com.simulator;
+package com.matching.engine;
 
-import com.simulator.receivers.OrderReceiver;
-import com.simulator.senders.MarketByPriceSender;
-import com.simulator.service.OrderBookManager;
+import com.matching.engine.receivers.OrderReceiver;
+import com.matching.engine.senders.MarketByPriceSender;
+import com.matching.engine.service.OrderBookManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
