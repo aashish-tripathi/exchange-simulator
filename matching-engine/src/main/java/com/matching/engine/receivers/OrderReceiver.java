@@ -131,4 +131,12 @@ public class OrderReceiver implements Runnable {
     public void shutdown(){
         kafkaConsumer.wakeup();
     }
+
+
+    @Override
+    public String toString() {
+        return "OrderReceiver{" +
+                "topic='" + topic + '\'' +
+                '}';
+    }
 }

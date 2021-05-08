@@ -16,6 +16,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class StartMatchingEngineApp {
 
@@ -59,8 +60,12 @@ public class StartMatchingEngineApp {
             OrderReceiver orderReceiver = new OrderReceiver(serverUrl, orderTopic, orderBookManager, kafkaAsCarrier,latch);
             receivers.add(orderReceiver);
         }
-        receivers.forEach(r -> service.submit(r));
-        LOGGER.info("{} OrderReceivers has started...", workers);
+        AtomicInteger integer = new AtomicInteger(0);
+        receivers.forEach(r -> {
+            service.submit(r);
+            LOGGER.info("OrderReceivers {} has started {} ",integer.incrementAndGet(), r);
+        });
+
 
         Runtime.getRuntime().addShutdownHook(new Thread(()->{
             receivers.forEach(r->r.shutdown());
