@@ -17,6 +17,7 @@ import java.util.NavigableMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class OrderMatchingEngine implements Runnable {
 
@@ -285,8 +286,19 @@ public class OrderMatchingEngine implements Runnable {
     }
 
     public void printBook() {
-        LOGGER.info("Symbol " + symbol + "");
+
+        System.out.format("%-34s\n", "## Portfolio");
+        System.out.format("%-34s%16s%16s%24s\n", "Symbol", "Price", "Qty", "Value");
+        AtomicReference<Long> totalPortfolioValue = new AtomicReference<>();
+
+        System.out.format("\n");
+        System.out.format("%-34s%24f\n", "# Total Portfolio", totalPortfolioValue.get());
+        System.out.format("\n");
+
+        System.out.format("%-34s%16s\n", "Symbol",symbol);
+        System.out.format("%-34s\n", "## Buy Depth");
         LOGGER.info("  Bid " + "  Size  ");
+        System.out.format("%-34s%16s\n", "Bid","Size");
         for (double buyPrice : buyOrders.navigableKeySet()) {
             BlockingQueue<Order> buyOrder = buyOrders.get(buyPrice);
             long qty = getTotalQty(buyOrder);
@@ -294,6 +306,7 @@ public class OrderMatchingEngine implements Runnable {
                 //buyIterator.remove();
             } else {
                 LOGGER.info("  " + buyPrice + "   " + qty + "  ");
+                System.out.format("%-34f%16d\n", buyPrice,qty);
             }
         }
         LOGGER.info("  Offer " + " Size  ");
