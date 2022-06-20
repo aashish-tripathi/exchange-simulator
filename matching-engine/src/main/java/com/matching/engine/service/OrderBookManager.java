@@ -36,13 +36,25 @@ public class OrderBookManager implements BookManager {
     @Override
     public void routOrder(final Order order) throws JMSException {
         String symbol = String.valueOf(order.getSymbol());
-        OrderMatchingEngine matchingEngine = orderMatchingEngineMap.get(symbol);
+
+        OrderMatchingEngine matchingEngine =  orderMatchingEngineMap.computeIfAbsent(symbol,k-> {
+            try {
+                return new OrderMatchingEngine(serverUrl, symbol, tradeTopic, quoteTopic, marketPriceTopic, marketByPriceTopic, executionTopic, kafka);
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
+            return null;
+        });
+        LOGGER.info("Matching thread created for {}", symbol);
+        matchingEngine.addORUpdateOrderBook(order);
+
+        /*OrderMatchingEngine matchingEngine = orderMatchingEngineMap.get(symbol);
         if (matchingEngine == null) {
             matchingEngine = new OrderMatchingEngine(serverUrl, symbol, tradeTopic, quoteTopic, marketPriceTopic, marketByPriceTopic, executionTopic, kafka);
             orderMatchingEngineMap.put(symbol, matchingEngine);
             LOGGER.info("Matching thread created for {}", symbol);
         }
-        matchingEngine.addORUpdateOrderBook(order);
+        matchingEngine.addORUpdateOrderBook(order);*/
     }
 
     public void stopAllMatchingEngine(){
