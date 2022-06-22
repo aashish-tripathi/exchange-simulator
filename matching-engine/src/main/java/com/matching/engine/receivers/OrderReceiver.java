@@ -3,6 +3,7 @@ package com.matching.engine.receivers;
 import com.ashish.marketdata.avro.Order;
 import com.matching.engine.broker.KafkaBroker;
 import com.matching.engine.service.BookManager;
+import com.matching.engine.util.EXSIMCache;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
@@ -28,11 +29,11 @@ public class OrderReceiver implements Runnable {
     private KafkaConsumer<String, String> kafkaConsumer;
     private CountDownLatch latch;
     private volatile boolean running = true;
-
+    private EXSIMCache cache= EXSIMCache.getCache();
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderReceiver.class);
 
-    public OrderReceiver(String serverUrl, String topic, BookManager bookManager, CountDownLatch latch) {
-        this.topic = topic;
+    public OrderReceiver(String serverUrl, BookManager bookManager, CountDownLatch latch) {
+        this.topic = cache.topic(EXSIMCache.TXNTYPE.ORDER);
         this.bookManager = bookManager;
         this.latch=latch;
         this.kafkaConsumer = new KafkaBroker(serverUrl).createConsumer(null);

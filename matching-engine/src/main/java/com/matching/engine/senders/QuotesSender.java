@@ -2,6 +2,7 @@ package com.matching.engine.senders;
 
 import com.ashish.marketdata.avro.Quote;
 import com.matching.engine.broker.KafkaBroker;
+import com.matching.engine.util.EXSIMCache;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
@@ -28,11 +29,11 @@ public class QuotesSender implements Runnable {
     private KafkaProducer<String, String> kafkaProducer;
     private final Map<String, BlockingQueue<Quote>> quoteMap = new ConcurrentHashMap<>();
     private BlockingQueue<Quote> quoteQueue = new LinkedBlockingQueue<>();
-
+    private EXSIMCache cache= EXSIMCache.getCache();
     private static final Logger LOGGER = LoggerFactory.getLogger(QuotesSender.class);
 
-    public QuotesSender(String serverUrl, String topic, String symbol) {
-        this.topic = topic;
+    public QuotesSender(String serverUrl, String symbol) {
+        this.topic = cache.topic(EXSIMCache.TXNTYPE.QUOTE);
         Properties optionalProperties = new Properties();
         optionalProperties.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
         optionalProperties.put(ProducerConfig.ACKS_CONFIG, "all");
