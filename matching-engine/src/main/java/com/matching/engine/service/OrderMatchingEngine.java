@@ -27,7 +27,7 @@ public class OrderMatchingEngine implements Runnable {
     private final NavigableMap<Double, BlockingQueue<Order>> buyOrders;
     private final NavigableMap<Double, BlockingQueue<Order>> sellOrders;
 
-    // market data objects
+    // market data senders
     private final TradesSender tradeEngine;
     private final QuotesSender quoteEngine;
     private final MarketPriceSender marketPriceEngine;
@@ -36,16 +36,16 @@ public class OrderMatchingEngine implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderMatchingEngine.class);
 
-    public OrderMatchingEngine(String serverUrl, String symbol, String tradeTopic, String quoteTopic, String marketPriceTopic, String marketByPriceTopic, String executionsTopic) {
+    public OrderMatchingEngine(String serverUrl, String symbol) {
         this.symbol = symbol;
         this.exchange = "NSE";
         this.buyOrders = new ConcurrentSkipListMap<>();
         this.sellOrders = new ConcurrentSkipListMap<>();
-        this.tradeEngine = new TradesSender(serverUrl, tradeTopic, symbol);
-        this.quoteEngine = new QuotesSender(serverUrl, quoteTopic, symbol);
-        this.marketPriceEngine = new MarketPriceSender(serverUrl, marketPriceTopic, symbol);
-        this.marketByPriceSender = new MarketByPriceSender(serverUrl, marketByPriceTopic, symbol);
-        this.executionsSender = new ExecutionsSender(serverUrl, executionsTopic, symbol);
+        this.tradeEngine = new TradesSender(serverUrl,symbol);
+        this.quoteEngine = new QuotesSender(serverUrl, symbol);
+        this.marketPriceEngine = new MarketPriceSender(serverUrl, symbol);
+        this.marketByPriceSender = new MarketByPriceSender(serverUrl, symbol);
+        this.executionsSender = new ExecutionsSender(serverUrl, symbol);
         new Thread(this).start();
     }
 

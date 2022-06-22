@@ -2,6 +2,7 @@ package com.matching.engine.senders;
 
 import com.ashish.marketdata.avro.MarketPrice;
 import com.matching.engine.broker.KafkaBroker;
+import com.matching.engine.util.EXSIMCache;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
@@ -22,6 +23,7 @@ public class MarketPriceSender implements Runnable {
     private volatile boolean running = true;
     private boolean kafka;
     private String topic;
+    private EXSIMCache cache= EXSIMCache.getCache();
     private KafkaProducer<String, String> kafkaProducer;
     private BlockingQueue<MarketPrice> marketPriceQueue = new LinkedBlockingQueue<>();
     private MarketPrice lastSnapshot;
@@ -29,8 +31,8 @@ public class MarketPriceSender implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MarketPriceSender.class);
 
-    public MarketPriceSender(String serverUrl, String topic, String symbol) {
-        this.topic = topic;
+    public MarketPriceSender(String serverUrl, String symbol) {
+        this.topic = cache.topic(EXSIMCache.TXNTYPE.MARKET_PRICE);
         Properties optionalProperties = new Properties();
         optionalProperties.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
         optionalProperties.put(ProducerConfig.ACKS_CONFIG, "all");

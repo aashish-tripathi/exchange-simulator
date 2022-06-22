@@ -3,6 +3,7 @@ package com.matching.engine;
 import com.matching.engine.receivers.OrderReceiver;
 import com.matching.engine.senders.MarketByPriceSender;
 import com.matching.engine.service.OrderBookManager;
+import com.matching.engine.util.EXSIMCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,14 +35,22 @@ public class StartMatchingEngineApp {
         InputStream inputStream = StartMatchingEngineApp.class.getResourceAsStream(configPath);
         properties.load(inputStream);
 
+        EXSIMCache cache= EXSIMCache.getCache();
+
         String serverUrl =properties.getProperty("exsim.kafka.bootstrap.servers");
 
         final String orderTopic = properties.getProperty("exsim.nse.ordertopic");
+        cache.add(EXSIMCache.TXNTYPE.ORDER,orderTopic);
         final String tradeTopic = properties.getProperty("exsim.nse.tradetopic");
+        cache.add(EXSIMCache.TXNTYPE.TRADE,tradeTopic);
         final String quoteTopic = properties.getProperty("exsim.nse.quotestopic");
+        cache.add(EXSIMCache.TXNTYPE.QUOTE,quoteTopic);
         final String marketPriceTopic = properties.getProperty("exsim.nse.marketpricetopic");
+        cache.add(EXSIMCache.TXNTYPE.MARKET_PRICE,marketPriceTopic);
         final String marketByPriceTopic = properties.getProperty("exsim.nse.marketbypricetopic");
+        cache.add(EXSIMCache.TXNTYPE.MARKET_BY_PRICE,marketByPriceTopic);
         final String executionTopic = properties.getProperty("exsim.nse.executionstopic");
+        cache.add(EXSIMCache.TXNTYPE.EXECUTION,executionTopic);
         final int workers = Integer.parseInt(properties.getProperty("exsim.nse.consumer.threads"));
 
         ExecutorService service = Executors.newFixedThreadPool(10, r -> {
@@ -49,14 +58,15 @@ public class StartMatchingEngineApp {
             t.setUncaughtExceptionHandler((t1, e) -> LoggerFactory.getLogger(t1.getName()).error(e.getMessage(), e));
             return t;
         });
-        final OrderBookManager orderBookManager = new OrderBookManager(serverUrl, tradeTopic, quoteTopic, marketPriceTopic, marketByPriceTopic, executionTopic);
+        final OrderBookManager orderBookManager = new OrderBookManager(serverUrl);
         final CountDownLatch latch = new CountDownLatch(workers);
         final List<OrderReceiver> receivers = new ArrayList<>();
         for (int i = 0; i < workers; i++) {
-            OrderReceiver orderReceiver = new OrderReceiver(serverUrl, orderTopic, orderBookManager, latch);
+            OrderReceiver orderReceiver = new OrderReceiver(serverUrl, orderBookManager, latch);
             receivers.add(orderReceiver);
         }
         AtomicInteger integer = new AtomicInteger(0);
+
         receivers.forEach(r -> {
             service.submit(r);
             LOGGER.info("OrderReceivers {} has started {} ",integer.incrementAndGet(), r);
