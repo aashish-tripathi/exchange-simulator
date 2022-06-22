@@ -3,7 +3,7 @@ package com.matching.engine;
 import com.matching.engine.receivers.OrderReceiver;
 import com.matching.engine.senders.MarketByPriceSender;
 import com.matching.engine.service.OrderBookManager;
-import com.matching.engine.util.EXSIMCache;
+import com.matching.engine.util.ExSimCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,22 +33,22 @@ public class StartMatchingEngineApp {
         InputStream inputStream = StartMatchingEngineApp.class.getResourceAsStream(configPath);
         properties.load(inputStream);
 
-        EXSIMCache cache= EXSIMCache.getCache();
+        ExSimCache cache= ExSimCache.getCache();
 
         String serverUrl =properties.getProperty("exsim.kafka.bootstrap.servers");
-        cache.add(EXSIMCache.TXNTYPE.SERVER_URL,serverUrl);
+        cache.add(ExSimCache.TXNTYPE.SERVER_URL,serverUrl);
         final String orderTopic = properties.getProperty("exsim.nse.ordertopic");
-        cache.add(EXSIMCache.TXNTYPE.ORDER,orderTopic);
+        cache.add(ExSimCache.TXNTYPE.ORDER,orderTopic);
         final String tradeTopic = properties.getProperty("exsim.nse.tradetopic");
-        cache.add(EXSIMCache.TXNTYPE.TRADE,tradeTopic);
+        cache.add(ExSimCache.TXNTYPE.TRADE,tradeTopic);
         final String quoteTopic = properties.getProperty("exsim.nse.quotestopic");
-        cache.add(EXSIMCache.TXNTYPE.QUOTE,quoteTopic);
+        cache.add(ExSimCache.TXNTYPE.QUOTE,quoteTopic);
         final String marketPriceTopic = properties.getProperty("exsim.nse.marketpricetopic");
-        cache.add(EXSIMCache.TXNTYPE.MARKET_PRICE,marketPriceTopic);
+        cache.add(ExSimCache.TXNTYPE.MARKET_PRICE,marketPriceTopic);
         final String marketByPriceTopic = properties.getProperty("exsim.nse.marketbypricetopic");
-        cache.add(EXSIMCache.TXNTYPE.MARKET_BY_PRICE,marketByPriceTopic);
+        cache.add(ExSimCache.TXNTYPE.MARKET_BY_PRICE,marketByPriceTopic);
         final String executionTopic = properties.getProperty("exsim.nse.executionstopic");
-        cache.add(EXSIMCache.TXNTYPE.EXECUTION,executionTopic);
+        cache.add(ExSimCache.TXNTYPE.EXECUTION,executionTopic);
         final int workers = Integer.parseInt(properties.getProperty("exsim.nse.consumer.threads"));
 
         ExecutorService service = Executors.newFixedThreadPool(10, r -> {
@@ -60,7 +60,7 @@ public class StartMatchingEngineApp {
         final CountDownLatch latch = new CountDownLatch(workers);
         final List<OrderReceiver> receivers = new ArrayList<>();
         for (int i = 0; i < workers; i++) {
-            OrderReceiver orderReceiver = new OrderReceiver(serverUrl, orderBookManager, latch);
+            OrderReceiver orderReceiver = new OrderReceiver(orderBookManager, latch);
             receivers.add(orderReceiver);
         }
         AtomicInteger integer = new AtomicInteger(0);

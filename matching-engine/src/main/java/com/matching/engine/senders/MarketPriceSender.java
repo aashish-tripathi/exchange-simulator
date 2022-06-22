@@ -2,7 +2,7 @@ package com.matching.engine.senders;
 
 import com.ashish.marketdata.avro.MarketPrice;
 import com.matching.engine.broker.KafkaBroker;
-import com.matching.engine.util.EXSIMCache;
+import com.matching.engine.util.ExSimCache;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
@@ -11,7 +11,6 @@ import org.apache.kafka.clients.producer.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.JMSException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Base64;
@@ -23,7 +22,7 @@ public class MarketPriceSender implements Runnable {
     private volatile boolean running = true;
     private String topic;
     private String serverUrl;
-    private EXSIMCache cache= EXSIMCache.getCache();
+    private ExSimCache cache= ExSimCache.getCache();
     private KafkaProducer<String, String> kafkaProducer;
     private BlockingQueue<MarketPrice> marketPriceQueue = new LinkedBlockingQueue<>();
     private MarketPrice lastSnapshot;
@@ -32,8 +31,8 @@ public class MarketPriceSender implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(MarketPriceSender.class);
 
     public MarketPriceSender(String symbol) {
-        this.topic = cache.topic(EXSIMCache.TXNTYPE.MARKET_PRICE);
-        this.serverUrl = cache.topic(EXSIMCache.TXNTYPE.SERVER_URL);
+        this.topic = cache.topic(ExSimCache.TXNTYPE.MARKET_PRICE);
+        this.serverUrl = cache.topic(ExSimCache.TXNTYPE.SERVER_URL);
         Properties optionalProperties = new Properties();
         optionalProperties.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
         optionalProperties.put(ProducerConfig.ACKS_CONFIG, "all");

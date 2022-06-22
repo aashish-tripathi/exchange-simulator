@@ -4,12 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class EXSIMCache {
+public class ExSimCache {
 
-    private static EXSIMCache cache=new EXSIMCache();
+    private static ExSimCache cache=new ExSimCache();
     private Map<TXNTYPE,String> topicCache = new HashMap<>();
 
-    private EXSIMCache(){
+    private ExSimCache(){
 
     }
 
@@ -28,7 +28,7 @@ public class EXSIMCache {
         ORDER,EXECUTION,TRADE,QUOTE,MARKET_PRICE,MARKET_BY_PRICE,SERVER_URL
     }
 
-    public static EXSIMCache getCache(){
+    public static ExSimCache getCache(){
         return cache;
     }
 }

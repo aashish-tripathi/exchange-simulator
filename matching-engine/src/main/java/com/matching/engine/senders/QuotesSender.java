@@ -2,7 +2,7 @@ package com.matching.engine.senders;
 
 import com.ashish.marketdata.avro.Quote;
 import com.matching.engine.broker.KafkaBroker;
-import com.matching.engine.util.EXSIMCache;
+import com.matching.engine.util.ExSimCache;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
@@ -11,7 +11,6 @@ import org.apache.kafka.clients.producer.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.JMSException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Base64;
@@ -29,12 +28,12 @@ public class QuotesSender implements Runnable {
     private KafkaProducer<String, String> kafkaProducer;
     private final Map<String, BlockingQueue<Quote>> quoteMap = new ConcurrentHashMap<>();
     private BlockingQueue<Quote> quoteQueue = new LinkedBlockingQueue<>();
-    private EXSIMCache cache= EXSIMCache.getCache();
+    private ExSimCache cache= ExSimCache.getCache();
     private static final Logger LOGGER = LoggerFactory.getLogger(QuotesSender.class);
 
     public QuotesSender(String symbol) {
-        this.topic = cache.topic(EXSIMCache.TXNTYPE.QUOTE);
-        this.serverUrl = cache.topic(EXSIMCache.TXNTYPE.SERVER_URL);
+        this.topic = cache.topic(ExSimCache.TXNTYPE.QUOTE);
+        this.serverUrl = cache.topic(ExSimCache.TXNTYPE.SERVER_URL);
         Properties optionalProperties = new Properties();
         optionalProperties.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
         optionalProperties.put(ProducerConfig.ACKS_CONFIG, "all");
