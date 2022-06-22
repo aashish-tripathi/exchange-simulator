@@ -4,7 +4,6 @@ import com.ashish.marketdata.avro.AskDepth;
 import com.ashish.marketdata.avro.BidDepth;
 import com.ashish.marketdata.avro.MarketByPrice;
 import com.ashish.marketdata.avro.Order;
-import com.matching.engine.broker.EMSBroker;
 import com.matching.engine.broker.KafkaBroker;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Encoder;
@@ -15,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jms.JMSException;
-import javax.jms.TextMessage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
@@ -27,27 +25,20 @@ public class MarketByPriceSender implements Runnable{
     private volatile boolean running = true;
     private boolean kafka;
     private String topic;
-    private EMSBroker emsBroker;
     private KafkaProducer<String, String> kafkaProducer;
     private BlockingQueue<MarketByPrice> marketByPriceQueue = new LinkedBlockingQueue<>();
     private MarketByPrice lastSnapshot;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MarketByPriceSender.class);
 
-    public MarketByPriceSender(String serverUrl, String topic, String symbol, boolean kafka) throws JMSException {
+    public MarketByPriceSender(String serverUrl, String topic, String symbol) {
         this.topic = topic;
-        this.kafka = kafka;
-        if(!kafka) {
-            emsBroker = new EMSBroker(null, null, null);
-            emsBroker.createProducer(topic, true);
-        }else{
-            Properties optionalProperties = new Properties();
-            optionalProperties.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
-            optionalProperties.put(ProducerConfig.ACKS_CONFIG, "all");
-            optionalProperties.put(ProducerConfig.RETRIES_CONFIG,Integer.toString(Integer.MAX_VALUE));
-            optionalProperties.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "5");
-            kafkaProducer = new KafkaBroker(serverUrl).createProducer((optionalProperties)); // create producer
-        }
+        Properties optionalProperties = new Properties();
+        optionalProperties.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
+        optionalProperties.put(ProducerConfig.ACKS_CONFIG, "all");
+        optionalProperties.put(ProducerConfig.RETRIES_CONFIG,Integer.toString(Integer.MAX_VALUE));
+        optionalProperties.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, "5");
+        kafkaProducer = new KafkaBroker(serverUrl).createProducer((optionalProperties)); // create producer
         new Thread(this).start();
         LOGGER.info("MarketByPriceSender has started {}"+symbol);
     }
@@ -59,11 +50,7 @@ public class MarketByPriceSender implements Runnable{
             if (marketByPrice != null) {
                 byte[] encoded = serealizeAvroHttpRequestJSON(marketByPrice);
                 String encodedMarketByPrice = Base64.getEncoder().encodeToString(encoded);
-                if(!kafka){
-                    publishToEMS(marketByPrice, encodedMarketByPrice);
-                }else{
-                    publishToKafka(marketByPrice, encodedMarketByPrice);
-                }
+                publishToKafka(marketByPrice, encodedMarketByPrice);
                 LOGGER.info("MarketByPrice sent {}" , marketByPrice);
             }
         }
@@ -73,31 +60,17 @@ public class MarketByPriceSender implements Runnable{
 
     private void publishToKafka(MarketByPrice marketByPrice, String encodedMarketByPrice) {
         String symbol = marketByPrice.getSymbol().toString();
-        ProducerRecord<String,String> producerRecord = new ProducerRecord<String,String>(topic,symbol, encodedMarketByPrice);
-        kafkaProducer.send(producerRecord, new Callback() {
-            @Override
-            public void onCompletion(RecordMetadata recordMetadata, Exception e) {
-                if(e==null){
-                    LOGGER.info("Key {}" ,symbol);
-                    LOGGER.info("Topic {} " ,recordMetadata.topic());
-                    LOGGER.info("Partition {}" ,recordMetadata.partition());
-                    LOGGER.info("Offset {}" ,recordMetadata.offset());
-                }else{
-                    LOGGER.info("Exception Occurred while sending MarketByPrice through kafka... {}", e.getLocalizedMessage());
-                }
+        ProducerRecord<String,String> producerRecord = new ProducerRecord<>(topic, symbol, encodedMarketByPrice);
+        kafkaProducer.send(producerRecord, (recordMetadata, e) -> {
+            if(e==null){
+                LOGGER.info("Key {}" ,symbol);
+                LOGGER.info("Topic {} " ,recordMetadata.topic());
+                LOGGER.info("Partition {}" ,recordMetadata.partition());
+                LOGGER.info("Offset {}" ,recordMetadata.offset());
+            }else{
+                LOGGER.info("Exception Occurred while sending MarketByPrice through kafka... {}", e.getLocalizedMessage());
             }
         });
-    }
-
-    private void publishToEMS(MarketByPrice marketByPrice, String encodedMarketByPrice) {
-        try {
-            TextMessage message = emsBroker.createMessage();
-            message.setText(encodedMarketByPrice);
-            emsBroker.send(message);
-            LOGGER.info("MarketByPrice sent...{}", marketByPrice);
-        } catch (Exception e) {
-            LOGGER.error(e.getLocalizedMessage());
-        }
     }
 
     public void addORUpdateOrderBook(String symbol, NavigableMap<Double, BlockingQueue<Order>> buyOrdersMap, NavigableMap<Double, BlockingQueue<Order>> sellOrdersMap){
@@ -115,7 +88,7 @@ public class MarketByPriceSender implements Runnable{
             if (qty == 0) {
                 //buyIterator.remove();
             } else {
-                marketByPrice.getBidList().add(new BidDepth(buyPrice, qty, new Long(buyOrder.size())));
+                marketByPrice.getBidList().add(new BidDepth(buyPrice, qty, (long) buyOrder.size()));
             }
             buylimit++;
             if(buylimit==10){
@@ -132,7 +105,7 @@ public class MarketByPriceSender implements Runnable{
             if (qty == 0) {
                 //sellIterator.remove();
             } else {
-                marketByPrice.getAskList().add(new AskDepth(sellPrice, qty, new Long(sellOrder.size())));
+                marketByPrice.getAskList().add(new AskDepth(sellPrice, qty, (long) sellOrder.size()));
             }
             if(selllimit==10){
                 break;

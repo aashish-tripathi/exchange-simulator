@@ -1,7 +1,6 @@
 package com.matching.engine.receivers;
 
 import com.ashish.marketdata.avro.Order;
-import com.matching.engine.broker.EMSBroker;
 import com.matching.engine.broker.KafkaBroker;
 import com.matching.engine.service.BookManager;
 import org.apache.avro.io.DatumReader;
@@ -16,9 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.Session;
-import javax.jms.TextMessage;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
@@ -27,57 +23,30 @@ import java.util.concurrent.CountDownLatch;
 
 public class OrderReceiver implements Runnable {
 
-    private boolean kafka;
     private BookManager bookManager;
     private String topic;
-    private EMSBroker emsBroker;
     private KafkaConsumer<String, String> kafkaConsumer;
     private CountDownLatch latch;
     private volatile boolean running = true;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderReceiver.class);
 
-    public OrderReceiver(String serverUrl, String topic, BookManager bookManager, boolean kafka, CountDownLatch latch) throws JMSException {
+    public OrderReceiver(String serverUrl, String topic, BookManager bookManager, CountDownLatch latch) {
         this.topic = topic;
-        this.kafka = kafka;
         this.bookManager = bookManager;
         this.latch=latch;
-        if (!kafka) {
-            emsBroker = new EMSBroker(serverUrl, null, null);
-            emsBroker.createConsumer(topic, true);
-        } else {
-            this.kafkaConsumer = new KafkaBroker(serverUrl).createConsumer(null);
-            this.kafkaConsumer.subscribe(Arrays.asList(topic));
-        }
+        this.kafkaConsumer = new KafkaBroker(serverUrl).createConsumer(null);
+        this.kafkaConsumer.subscribe(Arrays.asList(topic));
     }
 
     @Override
     public void run() {
-        int ackMode = Session.AUTO_ACKNOWLEDGE;
         while (isRunning()) {
-            if (!kafka) {
-                try {
-                    consumeFromEMS();
-                } catch (JMSException e) {
-                    LOGGER.error(Thread.currentThread().getId()+" Received shutdown signal");
-                    try {
-                        emsBroker.closeConsumer();
-                    } catch (JMSException jmsException) {
-                        jmsException.printStackTrace();
-                    }
-                }finally {
-                    System.out.println("Done");
-                    //latch.countDown();
-                }
-            } else {
-                try {
-                    consumeFromKafka();
-                } catch (WakeupException | JMSException e) {
-                    LOGGER.error(Thread.currentThread().getId()+" Received shutdown signal");
-                    kafkaConsumer.close();
-                }finally {
-                   // latch.countDown();
-                }
+            try {
+                consumeFromKafka();
+            } catch (WakeupException | JMSException e) {
+                LOGGER.error(Thread.currentThread().getId()+" Received shutdown signal");
+                kafkaConsumer.close();
             }
         }
     }
@@ -95,22 +64,11 @@ public class OrderReceiver implements Runnable {
         }
     }
 
-    private void consumeFromEMS() throws JMSException {
-        Message msg = emsBroker.consumer().receive();
-        if (msg == null)
-            return;
-        if (msg instanceof TextMessage) {
-            TextMessage message = (TextMessage) msg;
-            byte[] decoded = Base64.getDecoder().decode(message.getText());
-            Order order = deSerealizeAvroHttpRequestJSON(decoded);
-            bookManager.routOrder(order);
-        }
-    }
 
     public Order deSerealizeAvroHttpRequestJSON(byte[] data) {
         DatumReader<Order> reader
                 = new SpecificDatumReader<>(Order.class);
-        Decoder decoder = null;
+        Decoder decoder;
         try {
             decoder = DecoderFactory.get().jsonDecoder(Order.getClassSchema(), new String(data));
             return reader.read(null, decoder);

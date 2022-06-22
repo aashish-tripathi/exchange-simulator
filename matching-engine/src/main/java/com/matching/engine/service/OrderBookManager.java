@@ -18,49 +18,27 @@ public class OrderBookManager implements BookManager {
     private String marketByPriceTopic;
     private String executionTopic;
     private ConcurrentMap<String, OrderMatchingEngine> orderMatchingEngineMap;
-    private boolean kafka;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderBookManager.class);
 
-    public OrderBookManager(String serverUrl, String tradeTopic, String quoteTopic, String marketPriceTopic, String marketByPriceTopic, String executionTopic, boolean kafkaAsCarrier) {
+    public OrderBookManager(String serverUrl, String tradeTopic, String quoteTopic, String marketPriceTopic, String marketByPriceTopic, String executionTopic) {
         this.serverUrl = serverUrl;
         this.tradeTopic = tradeTopic;
         this.quoteTopic = quoteTopic;
         this.marketPriceTopic = marketPriceTopic;
         this.marketByPriceTopic = marketByPriceTopic;
         this.executionTopic = executionTopic;
-        this.kafka = kafkaAsCarrier;
         this.orderMatchingEngineMap = new ConcurrentHashMap<>();
     }
 
     @Override
-    public void routOrder(final Order order) throws JMSException {
+    public void routOrder(final Order order) {
         String symbol = String.valueOf(order.getSymbol());
-
-        OrderMatchingEngine matchingEngine =  orderMatchingEngineMap.computeIfAbsent(symbol,k-> {
-            try {
-                return new OrderMatchingEngine(serverUrl, symbol, tradeTopic, quoteTopic, marketPriceTopic, marketByPriceTopic, executionTopic, kafka);
-            } catch (JMSException e) {
-                e.printStackTrace();
-            }
-            return null;
-        });
-        LOGGER.info("Matching thread created for {}", symbol);
-        matchingEngine.addORUpdateOrderBook(order);
-
-        /*OrderMatchingEngine matchingEngine = orderMatchingEngineMap.get(symbol);
-        if (matchingEngine == null) {
-            matchingEngine = new OrderMatchingEngine(serverUrl, symbol, tradeTopic, quoteTopic, marketPriceTopic, marketByPriceTopic, executionTopic, kafka);
-            orderMatchingEngineMap.put(symbol, matchingEngine);
+        OrderMatchingEngine matchingEngine =  orderMatchingEngineMap.computeIfAbsent(symbol,k-> new OrderMatchingEngine(serverUrl, symbol, tradeTopic, quoteTopic, marketPriceTopic, marketByPriceTopic, executionTopic));
+        if(!orderMatchingEngineMap.containsKey(symbol)) {
             LOGGER.info("Matching thread created for {}", symbol);
         }
-        matchingEngine.addORUpdateOrderBook(order);*/
+        matchingEngine.addORUpdateOrderBook(order);
     }
 
-    public void stopAllMatchingEngine(){
-        Set<String> symbols = orderMatchingEngineMap.keySet();
-        symbols.forEach(s->{
-            orderMatchingEngineMap.get(s).setRunning(false);
-        });
-    }
 }
