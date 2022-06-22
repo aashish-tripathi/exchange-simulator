@@ -25,14 +25,16 @@ public class TradesSender implements Runnable {
 
     private volatile boolean running = true;
     private String topic;
+    private String serverUrl;
     private KafkaProducer<String, String> kafkaProducer;
     private Map<String, BlockingQueue<Trade>> tradeMap = new ConcurrentHashMap<>();
     private BlockingQueue<Trade> tradeQueue = new LinkedBlockingQueue<>();
     private EXSIMCache cache= EXSIMCache.getCache();
     private static final Logger LOGGER = LoggerFactory.getLogger(TradesSender.class);
 
-    public TradesSender(String serverUrl, String symbol) {
+    public TradesSender(String symbol) {
         this.topic = cache.topic(EXSIMCache.TXNTYPE.TRADE);
+        this.serverUrl = cache.topic(EXSIMCache.TXNTYPE.SERVER_URL);
         Properties optionalProperties = new Properties();
         optionalProperties.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
         optionalProperties.put(ProducerConfig.ACKS_CONFIG, "all");

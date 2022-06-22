@@ -36,16 +36,16 @@ public class OrderMatchingEngine implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderMatchingEngine.class);
 
-    public OrderMatchingEngine(String serverUrl, String symbol) {
+    public OrderMatchingEngine(String symbol) {
         this.symbol = symbol;
         this.exchange = "NSE";
         this.buyOrders = new ConcurrentSkipListMap<>();
         this.sellOrders = new ConcurrentSkipListMap<>();
-        this.tradeEngine = new TradesSender(serverUrl,symbol);
-        this.quoteEngine = new QuotesSender(serverUrl, symbol);
-        this.marketPriceEngine = new MarketPriceSender(serverUrl, symbol);
-        this.marketByPriceSender = new MarketByPriceSender(serverUrl, symbol);
-        this.executionsSender = new ExecutionsSender(serverUrl, symbol);
+        this.tradeEngine = new TradesSender(symbol);
+        this.quoteEngine = new QuotesSender(symbol);
+        this.marketPriceEngine = new MarketPriceSender(symbol);
+        this.marketByPriceSender = new MarketByPriceSender(symbol);
+        this.executionsSender = new ExecutionsSender(symbol);
         new Thread(this).start();
     }
 
