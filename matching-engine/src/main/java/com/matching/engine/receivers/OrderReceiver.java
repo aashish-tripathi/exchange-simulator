@@ -3,7 +3,7 @@ package com.matching.engine.receivers;
 import com.ashish.marketdata.avro.Order;
 import com.matching.engine.broker.KafkaBroker;
 import com.matching.engine.service.BookManager;
-import com.matching.engine.util.EXSIMCache;
+import com.matching.engine.util.ExSimCache;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.DecoderFactory;
@@ -26,14 +26,16 @@ public class OrderReceiver implements Runnable {
 
     private BookManager bookManager;
     private String topic;
+    private String serverUrl;
     private KafkaConsumer<String, String> kafkaConsumer;
     private CountDownLatch latch;
     private volatile boolean running = true;
-    private EXSIMCache cache= EXSIMCache.getCache();
+    private ExSimCache cache= ExSimCache.getCache();
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderReceiver.class);
 
-    public OrderReceiver(String serverUrl, BookManager bookManager, CountDownLatch latch) {
-        this.topic = cache.topic(EXSIMCache.TXNTYPE.ORDER);
+    public OrderReceiver(BookManager bookManager, CountDownLatch latch) {
+        this.topic = cache.topic(ExSimCache.TXNTYPE.ORDER);
+        this.serverUrl = cache.topic(ExSimCache.TXNTYPE.SERVER_URL);
         this.bookManager = bookManager;
         this.latch=latch;
         this.kafkaConsumer = new KafkaBroker(serverUrl).createConsumer(null);
@@ -64,7 +66,6 @@ public class OrderReceiver implements Runnable {
             LOGGER.info("Partition:" + record.partition() + ",Offset:" + record.offset());
         }
     }
-
 
     public Order deSerealizeAvroHttpRequestJSON(byte[] data) {
         DatumReader<Order> reader
