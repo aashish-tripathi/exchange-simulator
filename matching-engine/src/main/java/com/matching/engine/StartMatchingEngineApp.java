@@ -22,8 +22,8 @@ public class StartMatchingEngineApp {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MarketByPriceSender.class);
 
-    public static void main(String[] args) throws JMSException, InterruptedException, IOException {
-        String configPath = null;
+    public static void main(String[] args) throws IOException {
+        String configPath;
         if (args.length == 0) {
             LOGGER.warn("Config file not provided, loading file from default directory");
             configPath = "/exsim-me.properties";
@@ -34,8 +34,7 @@ public class StartMatchingEngineApp {
         InputStream inputStream = StartMatchingEngineApp.class.getResourceAsStream(configPath);
         properties.load(inputStream);
 
-        final boolean kafkaAsCarrier = true;
-        String serverUrl = kafkaAsCarrier ? properties.getProperty("exsim.kafka.bootstrap.servers") : properties.getProperty("exsim.tibcoems.serverurl");
+        String serverUrl =properties.getProperty("exsim.kafka.bootstrap.servers");
 
         final String orderTopic = properties.getProperty("exsim.nse.ordertopic");
         final String tradeTopic = properties.getProperty("exsim.nse.tradetopic");
@@ -45,19 +44,16 @@ public class StartMatchingEngineApp {
         final String executionTopic = properties.getProperty("exsim.nse.executionstopic");
         final int workers = Integer.parseInt(properties.getProperty("exsim.nse.consumer.threads"));
 
-        ExecutorService service = Executors.newFixedThreadPool(10, new ThreadFactory() {
-            @Override
-            public Thread newThread(Runnable r) {
-                Thread t = new Thread(r, "Order Consumer...");
-                t.setUncaughtExceptionHandler((t1, e) -> LoggerFactory.getLogger(t1.getName()).error(e.getMessage(), e));
-                return t;
-            }
+        ExecutorService service = Executors.newFixedThreadPool(10, r -> {
+            Thread t = new Thread(r, "Order Consumer...");
+            t.setUncaughtExceptionHandler((t1, e) -> LoggerFactory.getLogger(t1.getName()).error(e.getMessage(), e));
+            return t;
         });
-        final OrderBookManager orderBookManager = new OrderBookManager(serverUrl, tradeTopic, quoteTopic, marketPriceTopic, marketByPriceTopic, executionTopic, kafkaAsCarrier);
+        final OrderBookManager orderBookManager = new OrderBookManager(serverUrl, tradeTopic, quoteTopic, marketPriceTopic, marketByPriceTopic, executionTopic);
         final CountDownLatch latch = new CountDownLatch(workers);
         final List<OrderReceiver> receivers = new ArrayList<>();
         for (int i = 0; i < workers; i++) {
-            OrderReceiver orderReceiver = new OrderReceiver(serverUrl, orderTopic, orderBookManager, kafkaAsCarrier,latch);
+            OrderReceiver orderReceiver = new OrderReceiver(serverUrl, orderTopic, orderBookManager, latch);
             receivers.add(orderReceiver);
         }
         AtomicInteger integer = new AtomicInteger(0);
