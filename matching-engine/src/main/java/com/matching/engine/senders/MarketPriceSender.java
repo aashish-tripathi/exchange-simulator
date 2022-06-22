@@ -21,8 +21,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class MarketPriceSender implements Runnable {
     private volatile boolean running = true;
-    private boolean kafka;
     private String topic;
+    private String serverUrl;
     private EXSIMCache cache= EXSIMCache.getCache();
     private KafkaProducer<String, String> kafkaProducer;
     private BlockingQueue<MarketPrice> marketPriceQueue = new LinkedBlockingQueue<>();
@@ -31,8 +31,9 @@ public class MarketPriceSender implements Runnable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MarketPriceSender.class);
 
-    public MarketPriceSender(String serverUrl, String symbol) {
+    public MarketPriceSender(String symbol) {
         this.topic = cache.topic(EXSIMCache.TXNTYPE.MARKET_PRICE);
+        this.serverUrl = cache.topic(EXSIMCache.TXNTYPE.SERVER_URL);
         Properties optionalProperties = new Properties();
         optionalProperties.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
         optionalProperties.put(ProducerConfig.ACKS_CONFIG, "all");

@@ -23,14 +23,16 @@ public class ExecutionsSender implements Runnable {
 
     private volatile boolean running = true;
     private String topic;
+    private String serverUrl;
     private EXSIMCache cache= EXSIMCache.getCache();
     private KafkaProducer<String, String> kafkaProducer;
     private BlockingQueue<Order> executions = new LinkedBlockingQueue<>();
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ExecutionsSender.class);
 
-    public ExecutionsSender(String serverUrl, String symbol) {
+    public ExecutionsSender(String symbol) {
         this.topic = cache.topic(EXSIMCache.TXNTYPE.EXECUTION);
+        this.serverUrl = cache.topic(EXSIMCache.TXNTYPE.SERVER_URL);
         Properties optionalProperties = new Properties();
         optionalProperties.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
         optionalProperties.put(ProducerConfig.ACKS_CONFIG, "all");

@@ -24,16 +24,17 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class QuotesSender implements Runnable {
 
     private volatile boolean running = true;
-    private boolean kafka;
     private String topic;
+    private String serverUrl;
     private KafkaProducer<String, String> kafkaProducer;
     private final Map<String, BlockingQueue<Quote>> quoteMap = new ConcurrentHashMap<>();
     private BlockingQueue<Quote> quoteQueue = new LinkedBlockingQueue<>();
     private EXSIMCache cache= EXSIMCache.getCache();
     private static final Logger LOGGER = LoggerFactory.getLogger(QuotesSender.class);
 
-    public QuotesSender(String serverUrl, String symbol) {
+    public QuotesSender(String symbol) {
         this.topic = cache.topic(EXSIMCache.TXNTYPE.QUOTE);
+        this.serverUrl = cache.topic(EXSIMCache.TXNTYPE.SERVER_URL);
         Properties optionalProperties = new Properties();
         optionalProperties.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
         optionalProperties.put(ProducerConfig.ACKS_CONFIG, "all");

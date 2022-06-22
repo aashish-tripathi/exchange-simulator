@@ -25,7 +25,7 @@ public class EXSIMCache {
     }
 
     public enum TXNTYPE{
-        ORDER,EXECUTION,TRADE,QUOTE,MARKET_PRICE,MARKET_BY_PRICE
+        ORDER,EXECUTION,TRADE,QUOTE,MARKET_PRICE,MARKET_BY_PRICE,SERVER_URL
     }
 
     public static EXSIMCache getCache(){

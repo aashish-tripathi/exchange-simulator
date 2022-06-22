@@ -7,7 +7,6 @@ import com.matching.engine.util.EXSIMCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.JMSException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -16,7 +15,6 @@ import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class StartMatchingEngineApp {
@@ -38,7 +36,7 @@ public class StartMatchingEngineApp {
         EXSIMCache cache= EXSIMCache.getCache();
 
         String serverUrl =properties.getProperty("exsim.kafka.bootstrap.servers");
-
+        cache.add(EXSIMCache.TXNTYPE.SERVER_URL,serverUrl);
         final String orderTopic = properties.getProperty("exsim.nse.ordertopic");
         cache.add(EXSIMCache.TXNTYPE.ORDER,orderTopic);
         final String tradeTopic = properties.getProperty("exsim.nse.tradetopic");
@@ -58,7 +56,7 @@ public class StartMatchingEngineApp {
             t.setUncaughtExceptionHandler((t1, e) -> LoggerFactory.getLogger(t1.getName()).error(e.getMessage(), e));
             return t;
         });
-        final OrderBookManager orderBookManager = new OrderBookManager(serverUrl);
+        final OrderBookManager orderBookManager = new OrderBookManager();
         final CountDownLatch latch = new CountDownLatch(workers);
         final List<OrderReceiver> receivers = new ArrayList<>();
         for (int i = 0; i < workers; i++) {

@@ -11,20 +11,19 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 public class OrderBookManager implements BookManager {
-    private String serverUrl;
     private ConcurrentMap<String, OrderMatchingEngine> orderMatchingEngineMap;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderBookManager.class);
 
-    public OrderBookManager(String serverUrl) {
-        this.serverUrl = serverUrl;
+    public OrderBookManager() {
+
         this.orderMatchingEngineMap = new ConcurrentHashMap<>();
     }
 
     @Override
     public void routOrder(final Order order) {
         String symbol = String.valueOf(order.getSymbol());
-        OrderMatchingEngine matchingEngine =  orderMatchingEngineMap.computeIfAbsent(symbol,k-> new OrderMatchingEngine(serverUrl, symbol));
+        OrderMatchingEngine matchingEngine =  orderMatchingEngineMap.computeIfAbsent(symbol,k-> new OrderMatchingEngine(symbol));
         if(!orderMatchingEngineMap.containsKey(symbol)) {
             LOGGER.info("Matching thread created for {}", symbol);
         }
