@@ -15,7 +15,6 @@ import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.JMSException;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
@@ -30,14 +29,14 @@ public class OrderReceiver implements Runnable {
     private KafkaConsumer<String, String> kafkaConsumer;
     private CountDownLatch latch;
     private volatile boolean running = true;
-    private ExSimCache cache= ExSimCache.getCache();
+    private ExSimCache cache = ExSimCache.getCache();
     private static final Logger LOGGER = LoggerFactory.getLogger(OrderReceiver.class);
 
     public OrderReceiver(BookManager bookManager, CountDownLatch latch) {
         this.topic = cache.topic(ExSimCache.TXNTYPE.ORDER);
         this.serverUrl = cache.topic(ExSimCache.TXNTYPE.SERVER_URL);
         this.bookManager = bookManager;
-        this.latch=latch;
+        this.latch = latch;
         this.kafkaConsumer = new KafkaBroker(serverUrl).createConsumer(null);
         this.kafkaConsumer.subscribe(Arrays.asList(topic));
     }
@@ -47,14 +46,14 @@ public class OrderReceiver implements Runnable {
         while (isRunning()) {
             try {
                 consumeFromKafka();
-            } catch (WakeupException | JMSException e) {
-                LOGGER.error(Thread.currentThread().getId()+" Received shutdown signal");
+            } catch (WakeupException e) {
+                LOGGER.error(Thread.currentThread().getId() + " Received shutdown signal");
                 kafkaConsumer.close();
             }
         }
     }
 
-    private void consumeFromKafka() throws WakeupException, JMSException {
+    private void consumeFromKafka() throws WakeupException {
         ConsumerRecords<String, String> records = kafkaConsumer.poll(Duration.ofMillis(10));
         for (ConsumerRecord<String, String> record : records) {
             String symbol = record.key();
@@ -88,7 +87,7 @@ public class OrderReceiver implements Runnable {
         this.running = running;
     }
 
-    public void shutdown(){
+    public void shutdown() {
         kafkaConsumer.wakeup();
     }
 

@@ -6,11 +6,9 @@ import com.ashish.marketdata.avro.Quote;
 import com.ashish.marketdata.avro.Trade;
 import com.matching.engine.senders.*;
 import com.matching.engine.util.Constant;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.JMSException;
 import java.util.Calendar;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -96,7 +94,7 @@ public class OrderMatchingEngine implements Runnable {
                     final long buyQty = getTotalQty(buyOrders);
                     final long sellQty = getTotalQty(sellOrders);
                     addQuote(buyPrice, buyQty, sellPrice, sellQty);
-                    execute(buyMap, sellMap, buyPrice, buyOrders, sellOrders,sellPrice);
+                    execute(buyMap, sellMap, buyPrice, buyOrders, sellOrders, sellPrice);
                     marketByPriceSender.addORUpdateOrderBook(symbol, getBuyOrders(), getSellOrders()); // send book
                 }
             }
@@ -163,7 +161,7 @@ public class OrderMatchingEngine implements Runnable {
         return buyPrice >= sellPrice;
     }
 
-    
+
     private void marketPriceUpdate(Order order) {
         MarketPrice marketPrice = marketPriceEngine.marketPrice(symbol);
         if (marketPrice.getOpen() == null || marketPrice.getOpen() == 0.0) {
@@ -249,10 +247,10 @@ public class OrderMatchingEngine implements Runnable {
         System.out.format("%-34s%24f\n", "# Total Portfolio", totalPortfolioValue.get());
         System.out.format("\n");
 
-        System.out.format("%-34s%16s\n", "Symbol",symbol);
+        System.out.format("%-34s%16s\n", "Symbol", symbol);
         System.out.format("%-34s\n", "## Buy Depth");
         LOGGER.info("  Bid " + "  Size  ");
-        System.out.format("%-34s%16s\n", "Bid","Size");
+        System.out.format("%-34s%16s\n", "Bid", "Size");
         for (double buyPrice : buyOrders.navigableKeySet()) {
             BlockingQueue<Order> buyOrder = buyOrders.get(buyPrice);
             long qty = getTotalQty(buyOrder);
@@ -260,7 +258,7 @@ public class OrderMatchingEngine implements Runnable {
                 //buyIterator.remove();
             } else {
                 LOGGER.info("  " + buyPrice + "   " + qty + "  ");
-                System.out.format("%-34f%16d\n", buyPrice,qty);
+                System.out.format("%-34f%16d\n", buyPrice, qty);
             }
         }
         LOGGER.info("  Offer " + " Size  ");
