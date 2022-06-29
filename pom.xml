@@ -65,37 +65,9 @@
         <dependency>
             <groupId>tibco-ems</groupId>
             <artifactId>schema-1.0-SNAPSHOT</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>tibco-ems</groupId>
-            <artifactId>jms-2.0</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>tibco-ems</groupId>
-            <artifactId>tibemsd_sec</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>tibco-ems</groupId>
-            <artifactId>tibjms</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>tibco-ems</groupId>
-            <artifactId>tibjmsadmin</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>tibco-ems</groupId>
-            <artifactId>tibrvjms</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
-            <groupId>tibco-ems</groupId>
-            <artifactId>tibjmsapps</artifactId>
-            <version>2.0</version>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/external-jars/schema-1.0-SNAPSHOT.jar</systemPath>
         </dependency>
     </dependencies>
 
